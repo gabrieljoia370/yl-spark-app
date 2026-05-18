@@ -3,6 +3,7 @@
 
 const STORAGE_KEY = "ylspark.library.v1";
 const API_ENDPOINT = "/api/generate";
+const IMAGE_ENDPOINT = "/api/generate-image";
 
 /* ---------- Commercial MVP: config + Supabase auth + usage ---------- */
 let appConfig = { freeLimit: 3, paymentLink: "#pricing", supabaseUrl: "", supabaseAnonKey: "", price: 390, currency: "UYU" };
@@ -415,7 +416,74 @@ function renderVisualSupports(v) {
 
 function renderImagePrompt(prompt) {
   if (!prompt) return "";
-  return `<div class="image-prompt"><strong>Image prompt:</strong> ${escapeHtml(prompt)}</div>`;
+  return `<div class="image-prompt"><strong>Image idea:</strong> ${escapeHtml(prompt)}</div>`;
+}
+
+function getFlashcardImageSrc(card) {
+  return card.imageBase64 || card.imageUrl || "";
+}
+
+function renderFlashcardImage(card) {
+  const src = getFlashcardImageSrc(card);
+  if (src) {
+    return `<div class="flashcard-image-wrap"><img class="flashcard-image" src="${escapeHtml(src)}" alt="${escapeHtml(card.word || "Flashcard image")}" loading="lazy"></div>`;
+  }
+  return `<div class="flashcard-image-placeholder"><span>Image will appear here</span></div>`;
+}
+
+async function generateFlashcardImages(inputs, result) {
+  if (!result || !Array.isArray(result.cards) || result.cards.length === 0) return result;
+
+  const cardsToImage = result.cards.map((card) => ({
+    word: card.word || "",
+    sentence: card.sentence || "",
+    imagePrompt: card.imagePrompt || "",
+  }));
+
+  const imageNotice = document.getElementById("flashcard-image-status");
+  if (imageNotice) imageNotice.textContent = "Generating flashcard images…";
+
+  try {
+    const res = await fetch(IMAGE_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentSession?.access_token || ""}`,
+      },
+      body: JSON.stringify({
+        topic: inputs.topic,
+        ageGroup: inputs.ageGroup,
+        level: inputs.level,
+        cards: cardsToImage,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Could not generate images.");
+
+    const imageMap = new Map((data.images || []).map((img) => [String(img.word || "").toLowerCase(), img]));
+    result.cards = result.cards.map((card) => {
+      const match = imageMap.get(String(card.word || "").toLowerCase());
+      return {
+        ...card,
+        imageUrl: match?.imageUrl || card.imageUrl || "",
+        imageBase64: match?.imageBase64 || card.imageBase64 || "",
+      };
+    });
+
+    if (data.limited && imageNotice) {
+      imageNotice.textContent = `Free image preview: ${data.maxImages} images generated. Upgrade for more images per set.`;
+    } else if (imageNotice) {
+      imageNotice.textContent = "Images added.";
+    }
+
+    return result;
+  } catch (err) {
+    if (imageNotice) {
+      imageNotice.textContent = `Images could not be generated: ${err.message}. The flashcards still include image ideas.`;
+    }
+    return result;
+  }
 }
 
 function renderLesson(inputs, plan) {
@@ -522,7 +590,9 @@ document.getElementById("form-flashcards").addEventListener("submit", async (e) 
   showOutputLoading("flashcards", "Building your vocab set… usually takes 10–15 seconds.");
   try {
     const { result } = await callApi({ type: "flashcards", inputs });
-    renderFlashcards(inputs, result);
+    renderFlashcards(inputs, result, { loadingImages: true });
+    const resultWithImages = await generateFlashcardImages(inputs, result);
+    renderFlashcards(inputs, resultWithImages);
     await refreshAccountUi();
   } catch (err) {
     showError("flashcards", err.message);
@@ -531,13 +601,14 @@ document.getElementById("form-flashcards").addEventListener("submit", async (e) 
   }
 });
 
-function renderFlashcards(inputs, r) {
+function renderFlashcards(inputs, r, options = {}) {
   const out = document.getElementById("output-flashcards");
   out.hidden = false;
   const cards = (r.cards || [])
     .map(
       (c) => `
-      <div class="flashcard">
+      <div class="flashcard visual-flashcard">
+        ${renderFlashcardImage(c)}
         <div class="word">${escapeHtml(c.word || "")}</div>
         ${c.partOfSpeech ? `<div class="pos">${escapeHtml(c.partOfSpeech)}</div>` : ""}
         ${c.sentence ? `<div class="sentence">${escapeHtml(c.sentence)}</div>` : ""}
@@ -558,6 +629,7 @@ function renderFlashcards(inputs, r) {
       <span class="chip">${(r.cards || []).length} items</span>
     </div>
     <h3>Vocabulary set</h3>
+    <p class="hint flashcard-image-status" id="flashcard-image-status">${options.loadingImages ? "Generating flashcard images…" : ""}</p>
     <div class="cards-grid">${cards}</div>
     ${r.chant ? `<h3>Chant / song hook</h3><p><em>${escapeHtml(r.chant)}</em></p>` : ""}
     ${r.games ? `<h3>Mini-games</h3><ul>${r.games.map((g) => `<li><strong>${escapeHtml(g.name || "")}:</strong> ${escapeHtml(g.howTo || "")}</li>`).join("")}</ul>` : ""}
@@ -715,7 +787,7 @@ function renderItemBody(item) {
         ${(r.cards || [])
           .map(
             (c) =>
-              `<div class="flashcard"><div class="word">${escapeHtml(c.word || "")}</div>${
+              `<div class="flashcard visual-flashcard">${renderFlashcardImage(c)}<div class="word">${escapeHtml(c.word || "")}</div>${
                 c.sentence ? `<div class="sentence">${escapeHtml(c.sentence)}</div>` : ""
               }</div>`
           )

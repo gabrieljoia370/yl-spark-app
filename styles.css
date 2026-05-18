@@ -1133,3 +1133,62 @@ main.container {
   .auth-button-grid { grid-template-columns: 1fr; }
   .trust-row span { width: 100%; text-align: center; }
 }
+
+
+/* Flashcards with generated images */
+.visual-flashcard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flashcard-image-wrap,
+.flashcard-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f7fbfb;
+  border: 1.5px solid var(--line);
+  display: grid;
+  place-items: center;
+}
+
+.flashcard-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.flashcard-image-placeholder span {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px;
+}
+
+.flashcard-image-status {
+  min-height: 20px;
+}
+
+.image-prompt {
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--teal-soft);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+
+@media print {
+  .image-prompt,
+  .flashcard-image-status {
+    display: none !important;
+  }
+
+  .flashcard-image-wrap,
+  .flashcard-image-placeholder {
+    border: 1px solid #000;
+  }
+}
