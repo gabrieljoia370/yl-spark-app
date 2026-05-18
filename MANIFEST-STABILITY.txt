@@ -1,0 +1,25 @@
+YL Spark Stability package
+
+FILES:
+MANIFEST.txt
+README-COMMERCIAL-MVP.md
+README-MERCADOPAGO-SETUP.txt
+README-STABILITY-IMAGES.txt
+README-UPLOAD-FIRST.txt
+api/config.js
+api/create-checkout.js
+api/generate-image.js
+api/generate.js
+api/me.js
+api/mercadopago-webhook.js
+app.js
+assets/yl-spark-logo.png
+disclaimer.html
+index.html
+package.json
+privacy.html
+refunds.html
+styles.css
+supabase-setup.sql
+terms.html
+vercel.json
