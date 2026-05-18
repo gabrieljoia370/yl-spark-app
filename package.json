@@ -1,7 +1,7 @@
 {
   "name": "yl-spark",
   "version": "1.0.0",
-  "description": "Lesson drafts for English teachers of young learners.",
+  "description": "Commercial MVP for YL Spark with Supabase auth, usage limits, legal pages and Mercado Pago payment link.",
   "private": true,
   "engines": {
     "node": ">=18"

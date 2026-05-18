@@ -511,57 +511,6 @@ main {
   color: var(--ink);
 }
 
-
-/* Visual supports for YL/VYL lessons */
-.visual-supports {
-  display: grid;
-  gap: 14px;
-  margin: 14px 0 20px;
-}
-.visual-box {
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, #ffffff 0%, var(--teal-soft) 100%);
-  padding: 16px;
-}
-.visual-box p {
-  margin: 6px 0 0;
-}
-.visual-box ol,
-.visual-box ul {
-  margin-top: 8px;
-}
-.visual-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-}
-.visual-card {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: white;
-  padding: 14px;
-  page-break-inside: avoid;
-}
-.visual-card p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-.visual-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--coral-soft);
-  font-size: 24px;
-  flex: none;
-}
-
 /* Library */
 .library-toolbar {
   display: flex;
@@ -785,4 +734,68 @@ main {
   .shape {
     display: none;
   }
+}
+
+
+/* Commercial MVP: account and pricing */
+.account-strip {
+  background: white;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+.account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+#account-status {
+  display: block;
+}
+#usage-status {
+  color: var(--muted);
+  font-size: 13px;
+}
+.account-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.account-actions input[type="email"] {
+  padding: 9px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  min-width: 220px;
+  font: inherit;
+}
+.pricing-section {
+  margin: 38px 0 0;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+.price-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow-soft);
+}
+.price-card.featured {
+  border: 2px solid var(--teal);
+}
+.price-card h3 {
+  margin: 0 0 8px;
+  font-family: "Fraunces", "DM Sans", serif;
+}
+.price {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--teal-dark);
 }

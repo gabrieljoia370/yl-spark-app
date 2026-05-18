@@ -15,6 +15,7 @@
       content="Quick, classroom-ready lesson plans, activity adaptations and vocab sets for English teachers of 3–12 year olds. Built on Cambridge YL, British Council and Colorín Colorado."
     />
     <meta name="theme-color" content="#01696F" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -39,6 +40,22 @@
         </p>
       </div>
     </header>
+
+    <section class="account-strip">
+      <div class="container account-row">
+        <div>
+          <strong id="account-status">Not signed in</strong>
+          <span id="usage-status">Sign in to use your free sparks.</span>
+        </div>
+        <div class="account-actions">
+          <input id="auth-email" type="email" placeholder="teacher@email.com" />
+          <button class="btn ghost small" id="login-btn" type="button">Send login link</button>
+          <button class="btn ghost small" id="logout-btn" type="button" hidden>Log out</button>
+          <a class="btn primary small" id="upgrade-link" href="#pricing">Upgrade</a>
+        </div>
+      </div>
+    </section>
+
 
     <nav class="tabs" role="tablist" aria-label="Tools">
       <div class="container tabs-row">
@@ -277,10 +294,44 @@
       </section>
     </main>
 
+
+      <!-- PRICING -->
+      <section class="pricing-section" id="pricing">
+        <div class="tool-intro hue-lilac">
+          <div>
+            <h2>Plans for teachers</h2>
+            <p>Start with 3 free generations. Upgrade when you need unlimited lesson support.</p>
+          </div>
+        </div>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <h3>Free</h3>
+            <p class="price">$0</p>
+            <p>3 generations to test YL Spark.</p>
+          </div>
+          <div class="price-card featured">
+            <h3>Teacher Plan</h3>
+            <p class="price">$390 UYU / month</p>
+            <p>Unlimited practical planning support for your own classes.</p>
+            <a class="btn primary" id="payment-link" href="#" target="_blank" rel="noopener">Pay with Mercado Pago</a>
+          </div>
+          <div class="price-card">
+            <h3>School / Institute</h3>
+            <p class="price">Custom</p>
+            <p>Accounts for teams, institutes or schools. Contact us for pricing.</p>
+          </div>
+        </div>
+      </section>
+
     <footer class="site-footer">
       <div class="container">
         <p>
           <strong>YL Spark</strong> · A small tool for teachers juggling crayons, songs and CEFR.
+          · <a href="./terms.html">Terms</a>
+          · <a href="./privacy.html">Privacy</a>
+          · <a href="./refunds.html">Refunds</a>
+          · <a href="./disclaimer.html">AI & Educational Disclaimer</a>
+          · <a href="mailto:gabrieljoia370@gmail.com">Contact</a>
         </p>
       </div>
     </footer>

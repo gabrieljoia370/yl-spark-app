@@ -4,6 +4,124 @@
 const STORAGE_KEY = "ylspark.library.v1";
 const API_ENDPOINT = "/api/generate";
 
+/* ---------- Commercial MVP: config + Supabase auth + usage ---------- */
+let appConfig = { freeLimit: 3, paymentLink: "#", supabaseUrl: "", supabaseAnonKey: "" };
+let supabaseClient = null;
+let currentSession = null;
+
+async function initCommercialMvp() {
+  try {
+    const res = await fetch("/api/config");
+    appConfig = await res.json();
+
+    const payLinks = [document.getElementById("payment-link"), document.getElementById("upgrade-link")];
+    payLinks.forEach((a) => {
+      if (a && appConfig.paymentLink) a.href = appConfig.paymentLink;
+    });
+
+    if (appConfig.supabaseUrl && appConfig.supabaseAnonKey && window.supabase) {
+      supabaseClient = window.supabase.createClient(appConfig.supabaseUrl, appConfig.supabaseAnonKey);
+      const { data } = await supabaseClient.auth.getSession();
+      currentSession = data.session || null;
+      await refreshAccountUi();
+      supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+        currentSession = session;
+        await refreshAccountUi();
+      });
+    } else {
+      setAccountText("Login not configured", "Add Supabase env vars in Vercel.");
+    }
+  } catch (err) {
+    setAccountText("Account system unavailable", err.message || "Could not load config.");
+  }
+}
+
+function setAccountText(main, sub) {
+  const status = document.getElementById("account-status");
+  const usage = document.getElementById("usage-status");
+  if (status) status.textContent = main;
+  if (usage) usage.textContent = sub || "";
+}
+
+async function refreshAccountUi() {
+  const emailInput = document.getElementById("auth-email");
+  const loginBtn = document.getElementById("login-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  if (!currentSession) {
+    setAccountText("Not signed in", `Sign in to use your ${appConfig.freeLimit || 3} free sparks.`);
+    if (emailInput) emailInput.hidden = false;
+    if (loginBtn) loginBtn.hidden = false;
+    if (logoutBtn) logoutBtn.hidden = true;
+    return;
+  }
+
+  if (emailInput) emailInput.hidden = true;
+  if (loginBtn) loginBtn.hidden = true;
+  if (logoutBtn) logoutBtn.hidden = false;
+
+  const usage = await fetchUsage();
+  const email = currentSession.user?.email || "Signed in";
+  if (usage.plan === "paid") {
+    setAccountText(email, "Teacher Plan active · unlimited generations.");
+  } else {
+    const used = usage.used || 0;
+    const limit = usage.freeLimit || appConfig.freeLimit || 3;
+    const left = Math.max(0, limit - used);
+    setAccountText(email, `${used}/${limit} free generations used · ${left} left.`);
+  }
+}
+
+async function fetchUsage() {
+  try {
+    const token = currentSession?.access_token;
+    if (!token) return { used: 0, freeLimit: appConfig.freeLimit || 3, plan: "free" };
+    const res = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return { used: 0, freeLimit: appConfig.freeLimit || 3, plan: "free" };
+    return res.json();
+  } catch (_) {
+    return { used: 0, freeLimit: appConfig.freeLimit || 3, plan: "free" };
+  }
+}
+
+document.getElementById("login-btn")?.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    toast("Login is not configured yet.");
+    return;
+  }
+  const email = document.getElementById("auth-email")?.value?.trim();
+  if (!email) {
+    toast("Enter your email first.");
+    return;
+  }
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin }
+  });
+  if (error) {
+    toast(error.message);
+  } else {
+    toast("Check your email for the login link.");
+  }
+});
+
+document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  currentSession = null;
+  await refreshAccountUi();
+});
+
+function requireLoginBeforeGenerate() {
+  if (!currentSession?.access_token) {
+    toast("Please sign in first.");
+    document.getElementById("auth-email")?.focus();
+    throw new Error("Please sign in first to generate materials.");
+  }
+}
+
+initCommercialMvp();
+
+
 /* ---------- Tab switching ---------- */
 const tabs = document.querySelectorAll(".tab");
 const panels = document.querySelectorAll(".panel");
@@ -89,7 +207,7 @@ async function callApi(payload) {
   try {
     const res = await fetch(API_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentSession?.access_token || ""}` },
       body: JSON.stringify(payload),
       signal,
     });
@@ -143,50 +261,17 @@ function escapeHtml(s) {
   }[c]));
 }
 
-
-function renderVisualSupports(v) {
-  if (!v) return "";
-  const flashcards = (v.printableFlashcards || [])
-    .map(
-      (c) => `
-      <div class="visual-card">
-        <div class="visual-thumb" aria-hidden="true">🖼️</div>
-        <div>
-          <strong>${escapeHtml(c.label || "Visual")}</strong>
-          <p>${escapeHtml(c.imageIdea || "")}</p>
-        </div>
-      </div>`
-    )
-    .join("");
-
-  const prompts = (v.picturePrompts || [])
-    .map((p) => `<li>${escapeHtml(p)}</li>`)
-    .join("");
-
-  const noPrep = (v.noPrepVisuals || [])
-    .map((p) => `<li>${escapeHtml(p)}</li>`)
-    .join("");
-
-  return `
-    <h3>Visual supports</h3>
-    <div class="visual-supports">
-      ${v.boardPicture ? `<div class="visual-box"><strong>Board picture</strong><p>${escapeHtml(v.boardPicture)}</p></div>` : ""}
-      ${flashcards ? `<div class="visual-grid">${flashcards}</div>` : ""}
-      ${prompts ? `<div class="visual-box"><strong>Image prompts for Canva / AI image tools</strong><ol>${prompts}</ol></div>` : ""}
-      ${noPrep ? `<div class="visual-box"><strong>No-prep visual alternatives</strong><ul>${noPrep}</ul></div>` : ""}
-    </div>
-  `;
-}
-
 /* ---------- LESSON PLAN ---------- */
 document.getElementById("form-lesson").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = formValues(e.target);
+  try { requireLoginBeforeGenerate(); } catch (err) { showError("lesson", err.message); return; }
   setFormLoading(e.target, true, "Drafting…");
   showOutputLoading("lesson", "Drafting your lesson… usually takes 10–20 seconds.");
   try {
     const { result } = await callApi({ type: "lesson", inputs });
     renderLesson(inputs, result);
+    await refreshAccountUi();
   } catch (err) {
     showError("lesson", err.message);
   } finally {
@@ -225,7 +310,6 @@ function renderLesson(inputs, plan) {
     ${plan.overallAim ? `<p><strong>Overall aim:</strong> ${escapeHtml(plan.overallAim)}</p>` : ""}
     ${plan.materials ? `<p><strong>Materials:</strong> ${escapeHtml(plan.materials)}</p>` : ""}
     ${plan.targetLanguage ? `<p><strong>Target language:</strong> ${escapeHtml(plan.targetLanguage)}</p>` : ""}
-    ${renderVisualSupports(plan.visualSupports)}
     <h3>Lesson stages</h3>
     ${stages}
     ${plan.differentiation ? `<h3>Differentiation</h3><p>${escapeHtml(plan.differentiation)}</p>` : ""}
@@ -244,11 +328,13 @@ function renderLesson(inputs, plan) {
 document.getElementById("form-adapter").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = formValues(e.target);
+  try { requireLoginBeforeGenerate(); } catch (err) { showError("adapter", err.message); return; }
   setFormLoading(e.target, true, "Adapting…");
   showOutputLoading("adapter", "Adapting the activity… usually takes 10–15 seconds.");
   try {
     const { result } = await callApi({ type: "adapter", inputs });
     renderAdapter(inputs, result);
+    await refreshAccountUi();
   } catch (err) {
     showError("adapter", err.message);
   } finally {
@@ -290,11 +376,13 @@ function renderAdapter(inputs, r) {
 document.getElementById("form-flashcards").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = formValues(e.target);
+  try { requireLoginBeforeGenerate(); } catch (err) { showError("flashcards", err.message); return; }
   setFormLoading(e.target, true, "Building…");
   showOutputLoading("flashcards", "Building your vocab set… usually takes 10–15 seconds.");
   try {
     const { result } = await callApi({ type: "flashcards", inputs });
     renderFlashcards(inputs, result);
+    await refreshAccountUi();
   } catch (err) {
     showError("flashcards", err.message);
   } finally {
@@ -462,7 +550,6 @@ function renderItemBody(item) {
     const r = item.result;
     return `
       ${r.overallAim ? `<p><strong>Overall aim:</strong> ${escapeHtml(r.overallAim)}</p>` : ""}
-      ${renderVisualSupports(r.visualSupports)}
       ${(r.stages || [])
         .map(
           (s) => `<h4>${escapeHtml(s.name)} · ${escapeHtml(s.minutes || "")} min</h4>

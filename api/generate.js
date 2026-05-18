@@ -1,9 +1,15 @@
 // Vercel serverless function: POST /api/generate
-// Proxies requests to Anthropic's Claude API.
-// Required env var: ANTHROPIC_API_KEY
+// Commercial MVP: requires Supabase Auth, tracks usage, blocks after free limit unless plan is paid.
+// Required env vars:
+// ANTHROPIC_API_KEY
+// SUPABASE_URL
+// SUPABASE_SERVICE_ROLE_KEY
+// FREE_GENERATION_LIMIT (optional, default 3)
+// MERCADOPAGO_PAYMENT_LINK (optional)
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-haiku-4-5-20251001";
+const FREE_LIMIT = Number(process.env.FREE_GENERATION_LIMIT || 3);
 
 const BASE_SYSTEM = `You are YL Spark, a pedagogical assistant for English teachers of young learners (3–12). Your guidance is grounded in:
 - Cambridge English Young Learners frameworks (Pre A1 Starters, A1 Movers, A2 Flyers)
@@ -21,6 +27,7 @@ Core principles you always follow:
 - You always consider classroom management (transitions, attention signals, energy levels).
 - For VYL, sitting still is hard — alternate calm and active stages.
 - You suggest no-printer alternatives when possible.
+- Because this is for YL/VYL, every lesson plan must include practical visual support: picture prompts, board drawings, flashcards/realia, and image-generation prompts teachers can use in Canva or another tool.
 
 You ALWAYS respond with a single valid JSON object. No prose outside the JSON. No markdown code fences.`;
 
@@ -42,6 +49,12 @@ Return JSON with this exact shape:
   "overallAim": "By the end of the lesson, students will be able to ...",
   "targetLanguage": "The vocabulary/structures recycled across the lesson",
   "materials": "Comma-separated list. Mark printables with (printable). Suggest no-print alternatives where possible.",
+  "visualSupports": {
+    "boardPicture": "Describe one simple board picture or visual scene the teacher can draw/use.",
+    "flashcardIdeas": ["Flashcard/image idea 1", "Flashcard/image idea 2", "Flashcard/image idea 3"],
+    "imagePrompts": ["Prompt for a child-friendly classroom image/flashcard", "Prompt for another image"],
+    "noPrepAlternatives": ["How to teach this visually without printing", "Another no-prep visual option"]
+  },
   "stages": [
     {
       "name": "Warmer / Routine",
@@ -58,9 +71,7 @@ Return JSON with this exact shape:
   "differentiation": "How to support stronger and weaker learners in the same class",
   "assessment": "A quick formative check the teacher can use in class",
   "homework": "Optional, short, fun, parent-friendly"
-}
-
-Make sure stage minutes add up roughly to the lesson duration. For VYL, keep individual stages short (5–8 min). For older YL, stages can be longer.`,
+}`,
 
   adapter: (i) => `Adapt the following classroom activity for English learners.
 
@@ -79,12 +90,14 @@ Return JSON with this exact shape:
   "title": "Short title for the adapted activity",
   "adapted": "A 2–4 sentence description of the adapted activity, in plain English a teacher can scan quickly.",
   "steps": ["Step 1", "Step 2", "Step 3", "..."],
+  "visualSupports": {
+    "imagesOrFlashcards": ["Visual idea 1", "Visual idea 2"],
+    "noPrepVisuals": ["Gesture/realia/board drawing idea"]
+  },
   "scaffolding": ["Specific scaffolding tip 1", "Tip 2", "..."],
   "variations": ["Variation 1 (e.g. for stronger Ss)", "Variation 2 (e.g. quicker version)", "..."],
   "watchOuts": "1–2 sentences on common pitfalls and classroom management."
-}
-
-Be concrete. If the original activity is too abstract for the target age, redesign it (don't just simplify text). Use TPR, games, visuals, and realia for younger learners.`,
+}`,
 
   flashcards: (i) => `Build a vocabulary set for English young learners.
 
@@ -98,7 +111,7 @@ Return JSON with this exact shape:
 {
   "title": "A clear title for this vocab set",
   "cards": [
-    { "word": "the word or short phrase", "partOfSpeech": "noun|verb|adj|phrase", "sentence": "A short, kid-friendly example sentence using the word." }
+    { "word": "the word or short phrase", "partOfSpeech": "noun|verb|adj|phrase", "sentence": "A short, kid-friendly example sentence using the word.", "imagePrompt": "A child-friendly image prompt for this card" }
   ],
   "chant": "A short, rhythmic chant or song hook using several of the words (4–8 lines, fun, repetitive).",
   "games": [
@@ -106,13 +119,7 @@ Return JSON with this exact shape:
     { "name": "Game name", "howTo": "..." },
     { "name": "Game name", "howTo": "..." }
   ]
-}
-
-Make sure:
-- The number of cards matches the requested count exactly.
-- Words are level-appropriate (don't put advanced vocab in Pre-A1).
-- Example sentences use kid-friendly contexts (school, family, animals, food, play).
-- At least one of the games is TPR-based for younger learners.`,
+}`,
 };
 
 function buildPrompt(type, inputs) {
@@ -122,43 +129,110 @@ function buildPrompt(type, inputs) {
 }
 
 function extractJson(text) {
-  // Claude is told to return raw JSON, but be defensive.
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
   return JSON.parse(cleaned);
 }
 
+async function supabaseFetch(path, options = {}) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Supabase server env vars are missing.");
+  return fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+}
+
+async function getUserFromToken(req) {
+  const url = process.env.SUPABASE_URL;
+  const anonOrService = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const auth = req.headers.authorization || req.headers.Authorization || "";
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return null;
+  const res = await fetch(`${url}/auth/v1/user`, {
+    headers: { apikey: anonOrService, Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function getOrCreateProfile(user) {
+  const existing = await supabaseFetch(`profiles?id=eq.${encodeURIComponent(user.id)}&select=*`);
+  const rows = await existing.json();
+  if (rows && rows[0]) return rows[0];
+
+  const created = await supabaseFetch("profiles", {
+    method: "POST",
+    body: JSON.stringify({
+      id: user.id,
+      email: user.email,
+      plan: "free",
+      usage_count: 0,
+    }),
+  });
+  const createdRows = await created.json();
+  return createdRows[0];
+}
+
+async function incrementUsage(userId) {
+  // Uses RPC if you create it. Falls back to read/update if RPC is not present.
+  const rpc = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/increment_usage`, {
+    method: "POST",
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ user_id_input: userId }),
+  });
+  if (rpc.ok) return;
+
+  const current = await supabaseFetch(`profiles?id=eq.${encodeURIComponent(userId)}&select=usage_count`);
+  const rows = await current.json();
+  const count = Number(rows?.[0]?.usage_count || 0) + 1;
+  await supabaseFetch(`profiles?id=eq.${encodeURIComponent(userId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ usage_count: count }),
+  });
+}
+
 module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const user = await getUserFromToken(req);
+  if (!user) return res.status(401).json({ error: "Please sign in before generating materials." });
+
+  const profile = await getOrCreateProfile(user);
+  const isPaid = profile.plan === "paid";
+  const used = Number(profile.usage_count || 0);
+  if (!isPaid && used >= FREE_LIMIT) {
+    return res.status(402).json({
+      error: "Free limit reached. Please upgrade to continue using YL Spark.",
+      paymentLink: process.env.MERCADOPAGO_PAYMENT_LINK || "#pricing",
+    });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    res.status(500).json({ error: "Server is missing ANTHROPIC_API_KEY env var." });
-    return;
-  }
+  if (!apiKey) return res.status(500).json({ error: "Server is missing ANTHROPIC_API_KEY env var." });
 
   let body = req.body;
   if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-    } catch (_) {
-      body = {};
-    }
+    try { body = JSON.parse(body); } catch (_) { body = {}; }
   }
   const { type, inputs } = body || {};
-  if (!type || !inputs) {
-    res.status(400).json({ error: "Missing 'type' or 'inputs' in request body." });
-    return;
-  }
+  if (!type || !inputs) return res.status(400).json({ error: "Missing 'type' or 'inputs' in request body." });
 
   let prompt;
   try {
     prompt = buildPrompt(type, inputs);
   } catch (err) {
-    res.status(400).json({ error: err.message });
-    return;
+    return res.status(400).json({ error: err.message });
   }
 
   try {
@@ -171,7 +245,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2400,
+        max_tokens: 2800,
         system: BASE_SYSTEM,
         messages: [{ role: "user", content: prompt }],
       }),
@@ -179,26 +253,24 @@ module.exports = async function handler(req, res) {
 
     if (!upstream.ok) {
       const errText = await upstream.text();
-      res.status(upstream.status).json({
+      return res.status(upstream.status).json({
         error: `Anthropic API error: ${upstream.status}`,
         detail: errText.slice(0, 500),
       });
-      return;
     }
 
     const data = await upstream.json();
     const text = (data.content || []).map((p) => p.text || "").join("");
-
     let parsed;
     try {
       parsed = extractJson(text);
     } catch (_) {
-      res.status(502).json({ error: "Model didn't return valid JSON.", raw: text.slice(0, 400) });
-      return;
+      return res.status(502).json({ error: "Model didn't return valid JSON.", raw: text.slice(0, 400) });
     }
 
-    res.status(200).json({ result: parsed });
+    await incrementUsage(user.id);
+    return res.status(200).json({ result: parsed });
   } catch (err) {
-    res.status(500).json({ error: err.message || "Unexpected server error." });
+    return res.status(500).json({ error: err.message || "Unexpected server error." });
   }
 };
