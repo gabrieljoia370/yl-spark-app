@@ -32,3 +32,7 @@ $$;
 
 -- To reset a user's free usage:
 -- update public.profiles set usage_count = 0 where email = 'teacher@email.com';
+
+-- Mercado Pago update helper: run only if needed.
+-- The paid plan is stored in public.profiles.plan = 'paid'.
+-- Webhook endpoint: /api/mercadopago-webhook

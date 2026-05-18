@@ -3,6 +3,8 @@ module.exports = async function handler(req, res) {
     supabaseUrl: process.env.SUPABASE_URL || "",
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "",
     freeLimit: Number(process.env.FREE_GENERATION_LIMIT || 3),
-    paymentLink: process.env.MERCADOPAGO_PAYMENT_LINK || "#pricing",
+    paymentLink: "#pricing",
+    price: Number(process.env.MERCADOPAGO_PRICE || 390),
+    currency: process.env.MERCADOPAGO_CURRENCY || "UYU",
   });
 };

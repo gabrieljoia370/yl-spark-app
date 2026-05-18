@@ -5,7 +5,7 @@ const STORAGE_KEY = "ylspark.library.v1";
 const API_ENDPOINT = "/api/generate";
 
 /* ---------- Commercial MVP: config + Supabase auth + usage ---------- */
-let appConfig = { freeLimit: 3, paymentLink: "#", supabaseUrl: "", supabaseAnonKey: "" };
+let appConfig = { freeLimit: 3, paymentLink: "#pricing", supabaseUrl: "", supabaseAnonKey: "", price: 390, currency: "UYU" };
 let supabaseClient = null;
 let currentSession = null;
 
@@ -14,10 +14,8 @@ async function initCommercialMvp() {
     const res = await fetch("/api/config");
     appConfig = await res.json();
 
-    const payLinks = [document.getElementById("payment-link"), document.getElementById("upgrade-link")];
-    payLinks.forEach((a) => {
-      if (a && appConfig.paymentLink) a.href = appConfig.paymentLink;
-    });
+    setupUpgradeButtons();
+    updatePricingText();
 
     if (appConfig.supabaseUrl && appConfig.supabaseAnonKey && window.supabase) {
       supabaseClient = window.supabase.createClient(appConfig.supabaseUrl, appConfig.supabaseAnonKey);
@@ -34,6 +32,78 @@ async function initCommercialMvp() {
   } catch (err) {
     setAccountText("Account system unavailable", err.message || "Could not load config.");
   }
+}
+
+
+function updatePricingText() {
+  const priceEls = document.querySelectorAll("[data-price]");
+  priceEls.forEach((el) => {
+    el.textContent = `${appConfig.currency || "UYU"} ${appConfig.price || 390}`;
+  });
+}
+
+function setupUpgradeButtons() {
+  const buttons = [document.getElementById("payment-link"), document.getElementById("upgrade-link")].filter(Boolean);
+  buttons.forEach((btn) => {
+    btn.href = "#pricing";
+    if (btn.dataset.checkoutReady === "true") return;
+    btn.dataset.checkoutReady = "true";
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await startMercadoPagoCheckout(btn);
+    });
+  });
+}
+
+async function startMercadoPagoCheckout(button) {
+  if (!currentSession?.access_token) {
+    toast("Please sign in first, then choose Upgrade.");
+    document.getElementById("auth-email")?.focus();
+    return;
+  }
+
+  const originalText = button.textContent;
+  button.textContent = "Opening Mercado Pago…";
+  button.setAttribute("aria-busy", "true");
+
+  try {
+    const res = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentSession.access_token}`,
+      },
+      body: JSON.stringify({}),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Could not open Mercado Pago checkout.");
+
+    if (data.alreadyPaid) {
+      toast(data.message || "Your plan is already active.");
+      await refreshAccountUi();
+      return;
+    }
+
+    const url = data.init_point || data.sandbox_init_point;
+    if (!url) throw new Error("Mercado Pago did not return a checkout link.");
+    window.location.href = url;
+  } catch (err) {
+    toast(err.message || "Could not open checkout.");
+  } finally {
+    button.textContent = originalText;
+    button.removeAttribute("aria-busy");
+  }
+}
+
+function showPaymentReturnMessage() {
+  const params = new URLSearchParams(window.location.search);
+  const payment = params.get("payment");
+  if (!payment) return;
+  if (payment === "success") toast("Payment received. Your Teacher Plan should activate shortly.");
+  if (payment === "pending") toast("Payment pending. Your plan will activate when Mercado Pago confirms it.");
+  if (payment === "failure") toast("Payment was not completed. You can try again from Upgrade.");
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
 }
 
 function setAccountText(main, sub) {
@@ -166,6 +236,7 @@ function requireLoginBeforeGenerate() {
   }
 }
 
+showPaymentReturnMessage();
 initCommercialMvp();
 
 
