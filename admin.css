@@ -1,0 +1,147 @@
+.admin-body {
+  background: #fcf8ef;
+}
+
+.admin-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+}
+
+.admin-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  margin-bottom: 22px;
+}
+
+.admin-hero img {
+  width: 96px;
+  height: auto;
+}
+
+.admin-hero h1 {
+  margin: 0;
+  font-size: 34px;
+  color: var(--teal-dark);
+}
+
+.admin-hero p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.admin-hero .btn {
+  margin-left: auto;
+}
+
+.admin-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 22px;
+}
+
+.admin-card h2 {
+  margin: 0 0 8px;
+  color: var(--teal-dark);
+}
+
+.admin-card h3 {
+  color: var(--teal-dark);
+  margin-top: 24px;
+}
+
+.admin-grid {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0;
+}
+
+.admin-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-grid.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-card label {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.admin-card input,
+.admin-card textarea,
+.admin-card select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 11px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+}
+
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.admin-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.users-list {
+  display: grid;
+  gap: 10px;
+}
+
+.user-row {
+  display: grid;
+  grid-template-columns: 1.5fr .6fr .5fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.user-row strong {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .admin-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-hero .btn {
+    margin-left: 0;
+  }
+
+  .admin-grid.two,
+  .admin-grid.three,
+  .admin-grid.four,
+  .user-row {
+    grid-template-columns: 1fr;
+  }
+}

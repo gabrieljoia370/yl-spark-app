@@ -251,6 +251,22 @@ async function incrementUsage(userId) {
   });
 }
 
+
+async function getAppSettings() {
+  try {
+    const rowsRes = await supabaseFetch("app_settings?select=key,value");
+    if (!rowsRes.ok) return {};
+    const rows = await rowsRes.json();
+    const settings = {};
+    (rows || []).forEach((row) => {
+      settings[row.key] = row.value;
+    });
+    return settings;
+  } catch (_) {
+    return {};
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -258,9 +274,11 @@ module.exports = async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "Please sign in before generating materials." });
 
   const profile = await getOrCreateProfile(user);
+  const settings = await getAppSettings();
+  const dynamicFreeLimit = Number(settings.freeLimit || FREE_LIMIT);
   const isPaid = profile.plan === "paid";
   const used = Number(profile.usage_count || 0);
-  if (!isPaid && used >= FREE_LIMIT) {
+  if (!isPaid && used >= dynamicFreeLimit) {
     return res.status(402).json({
       error: "Free limit reached. Please upgrade to continue using YL Spark.",
       paymentLink: process.env.MERCADOPAGO_PAYMENT_LINK || "#pricing",
@@ -280,6 +298,12 @@ module.exports = async function handler(req, res) {
   let prompt;
   try {
     prompt = buildPrompt(type, inputs);
+    if (type === "lesson" && settings.lessonPromptExtra) {
+      prompt += "\n\nAdditional admin instruction:\n" + settings.lessonPromptExtra;
+    }
+    if (type === "flashcards" && settings.flashcardsPromptExtra) {
+      prompt += "\n\nAdditional admin instruction:\n" + settings.flashcardsPromptExtra;
+    }
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }

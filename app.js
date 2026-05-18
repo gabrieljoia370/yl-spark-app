@@ -17,6 +17,7 @@ async function initCommercialMvp() {
 
     setupUpgradeButtons();
     updatePricingText();
+    applyAdminSettings();
 
     if (appConfig.supabaseUrl && appConfig.supabaseAnonKey && window.supabase) {
       supabaseClient = window.supabase.createClient(appConfig.supabaseUrl, appConfig.supabaseAnonKey);
@@ -41,6 +42,36 @@ function updatePricingText() {
   priceEls.forEach((el) => {
     el.textContent = `${appConfig.currency || "UYU"} ${appConfig.price || 390}`;
   });
+}
+
+
+function applyAdminSettings() {
+  const s = appConfig.appSettings || {};
+
+  if (s.primaryColor) document.documentElement.style.setProperty("--teal", s.primaryColor);
+  if (s.accentColor) document.documentElement.style.setProperty("--coral", s.accentColor);
+
+  const heroTitle = document.querySelector(".site-header h1, .hero-title");
+  if (heroTitle && s.heroTitle) heroTitle.textContent = s.heroTitle;
+
+  const lede = document.querySelector(".lede, .hero-subtitle");
+  if (lede && s.heroDescription) lede.textContent = s.heroDescription;
+
+  const eyebrow = document.querySelector(".eyebrow");
+  if (eyebrow && s.heroSubtitle) {
+    eyebrow.innerHTML = `<span class="logo-dot"></span> ${escapeHtml(s.heroSubtitle)}`;
+  }
+
+  const logo = document.querySelector(".main-logo, .site-logo, .admin-hero img, .brand-logo");
+  if (logo && s.logoSize) {
+    logo.classList.remove("logo-small", "logo-medium", "logo-large");
+    logo.classList.add(`logo-${s.logoSize}`);
+  }
+
+  if (s.showPricing === false) {
+    const pricing = document.getElementById("pricing");
+    if (pricing) pricing.hidden = true;
+  }
 }
 
 function setupUpgradeButtons() {

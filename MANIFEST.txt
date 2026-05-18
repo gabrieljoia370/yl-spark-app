@@ -1,13 +1,21 @@
-YL Spark Reliable PDF Full Package
+YL Spark Admin Area Full Package
 
 FILES:
 MANIFEST.txt
+README-ADMIN-AREA.txt
 README-COMMERCIAL-MVP.md
 README-JSON-FIX.txt
 README-MANUAL-IMAGES-PDF.txt
 README-MERCADOPAGO-SETUP.txt
 README-RELIABLE-PDF.txt
 README-UPLOAD-FIRST.txt
+admin-setup.sql
+admin.css
+admin.html
+admin.js
+api/admin-get.js
+api/admin-save.js
+api/admin-update-user.js
 api/config.js
 api/create-checkout.js
 api/generate-image.js

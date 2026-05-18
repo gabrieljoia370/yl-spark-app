@@ -1383,3 +1383,20 @@ main.container {
 .pdf-export .image-actions-box {
   display: none;
 }
+
+
+/* Admin layout settings classes */
+.logo-small {
+  width: 90px !important;
+  max-width: 60% !important;
+}
+
+.logo-medium {
+  width: 150px !important;
+  max-width: 75% !important;
+}
+
+.logo-large {
+  width: 230px !important;
+  max-width: 90% !important;
+}

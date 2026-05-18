@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YL Spark Admin</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./admin.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+  <main class="admin-shell">
+    <section class="admin-hero">
+      <img src="assets/yl-spark-logo.png" alt="YL Spark" />
+      <div>
+        <h1>YL Spark Admin</h1>
+        <p>Edit content, layout, pricing and users without touching GitHub.</p>
+      </div>
+      <a class="btn ghost" href="/">Back to app</a>
+    </section>
+
+    <section class="admin-card" id="admin-login">
+      <h2>Admin login</h2>
+      <p>Only the admin email configured in Vercel can access this panel.</p>
+      <div class="admin-grid two">
+        <input id="admin-email" type="email" placeholder="Admin email" />
+        <input id="admin-password" type="password" placeholder="Password" />
+      </div>
+      <div class="admin-actions">
+        <button class="btn primary" id="admin-login-btn">Login</button>
+        <button class="btn ghost" id="admin-google-btn">Continue with Google</button>
+        <span id="admin-status" class="hint"></span>
+      </div>
+    </section>
+
+    <section class="admin-card" id="admin-panel" hidden>
+      <div class="admin-topline">
+        <div>
+          <h2>Site settings</h2>
+          <p>Edit the visible layout safely.</p>
+        </div>
+        <button class="btn ghost" id="admin-logout-btn">Logout</button>
+      </div>
+
+      <div class="admin-grid two">
+        <label>Hero title
+          <input id="heroTitle" type="text" />
+        </label>
+        <label>Hero subtitle
+          <input id="heroSubtitle" type="text" />
+        </label>
+      </div>
+
+      <label>Hero description
+        <textarea id="heroDescription" rows="3"></textarea>
+      </label>
+
+      <div class="admin-grid three">
+        <label>Primary colour
+          <input id="primaryColor" type="color" />
+        </label>
+        <label>Accent colour
+          <input id="accentColor" type="color" />
+        </label>
+        <label>Logo size
+          <select id="logoSize">
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="admin-grid four">
+        <label>Free limit
+          <input id="freeLimit" type="number" min="0" />
+        </label>
+        <label>Price
+          <input id="price" type="number" min="0" />
+        </label>
+        <label>Currency
+          <input id="currency" type="text" />
+        </label>
+        <label>Show pricing
+          <select id="showPricing">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+      </div>
+
+      <h3>AI instructions</h3>
+      <label>Extra lesson plan instruction
+        <textarea id="lessonPromptExtra" rows="3" placeholder="Example: Always include a movement activity and a no-print option."></textarea>
+      </label>
+
+      <label>Extra flashcards instruction
+        <textarea id="flashcardsPromptExtra" rows="3" placeholder="Example: Prefer concrete nouns and short sentences."></textarea>
+      </label>
+
+      <div class="admin-actions">
+        <button class="btn primary" id="save-settings-btn">Save settings</button>
+        <span id="save-status" class="hint"></span>
+      </div>
+    </section>
+
+    <section class="admin-card" id="users-panel" hidden>
+      <h2>Users</h2>
+      <p>Mark users as paid/free and reset usage.</p>
+      <div id="users-list" class="users-list"></div>
+    </section>
+  </main>
+
+  <script src="./admin.js"></script>
+</body>
+</html>
