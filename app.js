@@ -23,16 +23,44 @@ tabs.forEach((tab) => {
   });
 });
 
-/* ---------- Loader + toast ---------- */
-const loader = document.getElementById("loader");
-const loaderText = document.getElementById("loader-text");
-function showLoader(text) {
-  loaderText.textContent = text || "Working…";
-  loader.hidden = false;
+/* ---------- Inline loading + toast ---------- */
+function setFormLoading(form, isLoading, loadingText) {
+  const btn = form.querySelector('button[type="submit"]');
+  if (!btn) return;
+  if (isLoading) {
+    if (!btn.dataset.originalHtml) {
+      btn.dataset.originalHtml = btn.innerHTML;
+    }
+    btn.innerHTML =
+      '<span class="btn-spinner" aria-hidden="true"></span>' +
+      escapeHtml(loadingText || "Working…");
+    btn.disabled = true;
+  } else {
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+      delete btn.dataset.originalHtml;
+    }
+    btn.disabled = false;
+  }
 }
-function hideLoader() {
-  loader.hidden = true;
+
+function showOutputLoading(panelId, message) {
+  const out = document.getElementById(`output-${panelId}`);
+  if (!out) return;
+  out.hidden = false;
+  out.innerHTML =
+    '<div class="output-loading"><span class="output-spinner" aria-hidden="true"></span><span>' +
+    escapeHtml(message || "Working…") +
+    "</span></div>";
 }
+
+function clearOutput(panelId) {
+  const out = document.getElementById(`output-${panelId}`);
+  if (!out) return;
+  out.innerHTML = "";
+  out.hidden = true;
+}
+
 function toast(msg) {
   let el = document.querySelector(".toast");
   if (!el) {
@@ -119,14 +147,15 @@ function escapeHtml(s) {
 document.getElementById("form-lesson").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = formValues(e.target);
-  showLoader("Drafting your lesson…");
+  setFormLoading(e.target, true, "Drafting…");
+  showOutputLoading("lesson", "Drafting your lesson… usually takes 10–20 seconds.");
   try {
     const { result } = await callApi({ type: "lesson", inputs });
     renderLesson(inputs, result);
   } catch (err) {
     showError("lesson", err.message);
   } finally {
-    hideLoader();
+    setFormLoading(e.target, false);
   }
 });
 
@@ -179,14 +208,15 @@ function renderLesson(inputs, plan) {
 document.getElementById("form-adapter").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = formValues(e.target);
-  showLoader("Adapting the activity…");
+  setFormLoading(e.target, true, "Adapting…");
+  showOutputLoading("adapter", "Adapting the activity… usually takes 10–15 seconds.");
   try {
     const { result } = await callApi({ type: "adapter", inputs });
     renderAdapter(inputs, result);
   } catch (err) {
     showError("adapter", err.message);
   } finally {
-    hideLoader();
+    setFormLoading(e.target, false);
   }
 });
 
@@ -224,14 +254,15 @@ function renderAdapter(inputs, r) {
 document.getElementById("form-flashcards").addEventListener("submit", async (e) => {
   e.preventDefault();
   const inputs = formValues(e.target);
-  showLoader("Building your vocab set…");
+  setFormLoading(e.target, true, "Building…");
+  showOutputLoading("flashcards", "Building your vocab set… usually takes 10–15 seconds.");
   try {
     const { result } = await callApi({ type: "flashcards", inputs });
     renderFlashcards(inputs, result);
   } catch (err) {
     showError("flashcards", err.message);
   } finally {
-    hideLoader();
+    setFormLoading(e.target, false);
   }
 });
 
@@ -439,12 +470,6 @@ document.getElementById("lib-clear").addEventListener("click", () => {
   if (!confirm("Clear all saved items? This cannot be undone.")) return;
   persistLibrary([]);
   renderLibrary();
-});
-
-/* ---------- Loader cancel button ---------- */
-document.getElementById("loader-cancel").addEventListener("click", () => {
-  cancelActiveRequest();
-  hideLoader();
 });
 
 /* ---------- Init ---------- */
