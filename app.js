@@ -604,8 +604,8 @@ document.getElementById("form-flashcards").addEventListener("submit", async (e) 
   try {
     const { result } = await callApi({ type: "flashcards", inputs });
     renderFlashcards(inputs, result);
+    showGenerateImagesButton(inputs, result);
     await refreshAccountUi();
-    await generateImagesForRenderedFlashcards(inputs, result);
   } catch (err) {
     showError("flashcards", err.message);
   } finally {
@@ -655,6 +655,39 @@ function renderFlashcards(inputs, r) {
   });
 }
 
+
+function showGenerateImagesButton(inputs, result) {
+  const out = document.getElementById("output-flashcards");
+  if (!out) return;
+
+  const oldBox = document.getElementById("image-actions-box");
+  if (oldBox) oldBox.remove();
+
+  const box = document.createElement("div");
+  box.id = "image-actions-box";
+  box.className = "image-actions-box";
+  box.innerHTML = `
+    <button class="btn primary" id="generate-images-btn" type="button">Generate images for this set</button>
+    <p class="hint">Optional: generate images only if you want a visual set. Free users get a limited image preview.</p>
+  `;
+
+  const toolbar = out.querySelector(".output-toolbar");
+  if (toolbar) {
+    toolbar.insertAdjacentElement("afterend", box);
+  } else {
+    out.prepend(box);
+  }
+
+  const btn = document.getElementById("generate-images-btn");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.textContent = "Generating images…";
+    await generateImagesForRenderedFlashcards(inputs, result);
+    btn.textContent = "Images generated";
+  });
+}
+
+
 /* ---------- Output toolbar (save / copy / print) ---------- */
 function wireToolbar(outputEl, item) {
   outputEl.querySelectorAll("[data-act]").forEach((btn) => {
@@ -681,6 +714,57 @@ function copyOutput(outputEl) {
     .writeText(text)
     .then(() => toast("Copied to clipboard"))
     .catch(() => toast("Couldn't copy"));
+}
+
+function slugifyFilename(value) {
+  return String(value || "yl-spark-material")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "yl-spark-material";
+}
+
+async function downloadOutputPdf(outputEl, item) {
+  if (!window.html2pdf) {
+    toast("PDF library is loading. Try again in a few seconds.");
+    return;
+  }
+
+  const clone = outputEl.cloneNode(true);
+  clone.querySelectorAll(".output-toolbar").forEach((n) => n.remove());
+  clone.classList.add("pdf-export");
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "pdf-page";
+  wrapper.innerHTML = `
+    <div class="pdf-brand">
+      <img src="assets/yl-spark-logo.png" alt="YL Spark" />
+      <div>
+        <strong>YL Spark</strong>
+        <span>Materiales de Clase para Young Learners</span>
+      </div>
+    </div>
+  `;
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  try {
+    toast("Preparing PDF…");
+    await window.html2pdf().set({
+      margin: [8, 8, 8, 8],
+      filename: `${slugifyFilename(item?.title)}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+    }).from(wrapper).save();
+  } catch (err) {
+    toast(`PDF failed: ${err.message || "try Print instead"}`);
+  } finally {
+    wrapper.remove();
+  }
 }
 
 /* ---------- Saved library ---------- */

@@ -1,9 +1,8 @@
-// YL Spark: Stability AI flashcard image generation endpoint
-// Required env vars: STABILITY_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-// Optional env vars: IMAGE_PROVIDER=stability, STABILITY_OUTPUT_FORMAT=png
+// YL Spark: OpenAI flashcard image generation endpoint
+// Required env vars: OPENAI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
-const STABILITY_URL = "https://api.stability.ai/v2beta/stable-image/generate/core";
-const OUTPUT_FORMAT = process.env.STABILITY_OUTPUT_FORMAT || "png";
+const IMAGE_MODEL = process.env.IMAGE_MODEL || "gpt-image-1";
+const IMAGE_SIZE = process.env.IMAGE_SIZE || "1024x1024";
 
 async function getUserFromToken(req) {
   const url = process.env.SUPABASE_URL;
@@ -32,11 +31,12 @@ function clean(value, max = 220) {
 function buildPrompt(body) {
   const card = body.card || {};
   return [
-    "Square ESL flashcard illustration for children.",
-    "Simple colourful vector/cartoon style, clean white background, rounded friendly shapes.",
+    "Create ONE square child-friendly ESL flashcard illustration.",
+    "Style: simple colourful cartoon/vector illustration, clean white background, rounded friendly shapes.",
+    "One clear object or concept only.",
     "No text, no letters, no watermark, no logos, no scary content, no violence.",
-    `Word or concept: ${clean(card.word, 80)}.`,
-    card.sentence ? `Context: ${clean(card.sentence, 150)}.` : "",
+    `Word/concept: ${clean(card.word, 80)}.`,
+    card.sentence ? `Context sentence: ${clean(card.sentence, 150)}.` : "",
     body.topic ? `Topic: ${clean(body.topic, 80)}.` : "",
     body.level ? `CEFR level: ${clean(body.level, 50)}.` : "",
     body.ageGroup ? `Age group: ${clean(body.ageGroup, 50)}.` : "",
@@ -48,8 +48,8 @@ function buildPrompt(body) {
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  if (!process.env.STABILITY_API_KEY) {
-    return res.status(500).json({ error: "Missing STABILITY_API_KEY in Vercel." });
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({ error: "Missing OPENAI_API_KEY in Vercel." });
   }
 
   const user = await getUserFromToken(req);
@@ -63,37 +63,36 @@ module.exports = async function handler(req, res) {
   if (!body?.card?.word) return res.status(400).json({ error: "Missing card.word." });
 
   try {
-    const form = new FormData();
-    form.append("prompt", buildPrompt(body));
-    form.append("output_format", OUTPUT_FORMAT);
-    form.append("aspect_ratio", "1:1");
-
-    const upstream = await fetch(STABILITY_URL, {
+    const upstream = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
-        Accept: "image/*",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      body: form,
+      body: JSON.stringify({
+        model: IMAGE_MODEL,
+        prompt: buildPrompt(body),
+        size: IMAGE_SIZE,
+        n: 1,
+      }),
     });
 
+    const data = await upstream.json().catch(() => ({}));
+
     if (!upstream.ok) {
-      const errText = await upstream.text().catch(() => "");
       return res.status(upstream.status).json({
-        error: `Stability image error (${upstream.status}): ${errText.slice(0, 300)}`,
+        error: data?.error?.message || `OpenAI image error (${upstream.status})`,
       });
     }
 
-    const arrayBuffer = await upstream.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString("base64");
-
+    const img = data?.data?.[0] || {};
     return res.status(200).json({
       word: body.card.word,
-      imageUrl: "",
-      imageBase64: `data:image/${OUTPUT_FORMAT};base64,${base64}`,
-      provider: "stability",
+      imageUrl: img.url || "",
+      imageBase64: img.b64_json ? `data:image/png;base64,${img.b64_json}` : "",
+      provider: "openai",
     });
   } catch (err) {
-    return res.status(500).json({ error: err.message || "Unexpected Stability image error." });
+    return res.status(500).json({ error: err.message || "Unexpected image generation error." });
   }
 };

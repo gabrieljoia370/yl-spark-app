@@ -1,16 +1,5 @@
-YL SPARK FINAL FULL PACKAGE
-
-Includes:
-- Login / Supabase
-- Google login support
-- Mercado Pago checkout/webhook
-- Usage limits
-- Legal pages
-- Flashcard images via OpenAI
-- Download PDF button
-- Logo/assets
-
-FILES:
+FILES INCLUDED:
+MANIFEST.txt
 README-COMMERCIAL-MVP.md
 README-MERCADOPAGO-SETUP.txt
 README-UPLOAD-FIRST.txt
@@ -31,8 +20,3 @@ styles.css
 supabase-setup.sql
 terms.html
 vercel.json
-
-CHECK BEFORE UPLOADING:
-- app.js contains: Download PDF and generate-image
-- api/generate-image.js exists
-- index.html contains html2pdf
