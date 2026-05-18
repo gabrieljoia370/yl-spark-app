@@ -46,21 +46,50 @@ function toast(msg) {
 }
 
 /* ---------- API call ---------- */
+let activeAbortController = null;
+let activeTimeoutId = null;
+const REQUEST_TIMEOUT_MS = 75000;
+
 async function callApi(payload) {
-  const res = await fetch(API_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const j = await res.json();
-      detail = j.error || j.message || "";
-    } catch (_) {}
-    throw new Error(detail || `Request failed (${res.status})`);
+  if (activeAbortController) activeAbortController.abort();
+  activeAbortController = new AbortController();
+  activeTimeoutId = setTimeout(() => {
+    if (activeAbortController) activeAbortController.abort();
+  }, REQUEST_TIMEOUT_MS);
+  const signal = activeAbortController.signal;
+
+  try {
+    const res = await fetch(API_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal,
+    });
+    if (!res.ok) {
+      let detail = "";
+      try {
+        const j = await res.json();
+        detail = j.error || j.message || "";
+      } catch (_) {}
+      throw new Error(detail || `Request failed (${res.status})`);
+    }
+    return res.json();
+  } catch (err) {
+    if (err.name === "AbortError") {
+      throw new Error(
+        "The request was cancelled or took longer than 75 seconds. The most common cause is a missing or invalid ANTHROPIC_API_KEY on Vercel. Go to your Vercel project → Settings → Environment Variables and check it's set for Production, then redeploy."
+      );
+    }
+    throw err;
+  } finally {
+    if (activeTimeoutId) clearTimeout(activeTimeoutId);
+    activeTimeoutId = null;
+    activeAbortController = null;
   }
-  return res.json();
+}
+
+function cancelActiveRequest() {
+  if (activeAbortController) activeAbortController.abort();
 }
 
 /* ---------- Form helpers ---------- */
@@ -410,6 +439,12 @@ document.getElementById("lib-clear").addEventListener("click", () => {
   if (!confirm("Clear all saved items? This cannot be undone.")) return;
   persistLibrary([]);
   renderLibrary();
+});
+
+/* ---------- Loader cancel button ---------- */
+document.getElementById("loader-cancel").addEventListener("click", () => {
+  cancelActiveRequest();
+  hideLoader();
 });
 
 /* ---------- Init ---------- */

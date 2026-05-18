@@ -3,7 +3,7 @@
 // Required env var: ANTHROPIC_API_KEY
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-haiku-4-5";
+const MODEL = "claude-haiku-4-5-20251001";
 
 const BASE_SYSTEM = `You are YL Spark, a pedagogical assistant for English teachers of young learners (3–12). Your guidance is grounded in:
 - Cambridge English Young Learners frameworks (Pre A1 Starters, A1 Movers, A2 Flyers)

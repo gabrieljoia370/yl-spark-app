@@ -595,13 +595,23 @@ main {
 }
 .loader-card {
   background: white;
-  padding: 24px 32px;
+  padding: 22px 28px 18px;
   border-radius: var(--radius);
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 14px;
   box-shadow: var(--shadow);
   font-weight: 600;
+  min-width: 260px;
+}
+.loader-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.loader-row p {
+  margin: 0;
 }
 .spinner {
   width: 22px;
