@@ -54,3 +54,31 @@ This version uses a Mercado Pago payment link. After payment, manually mark the 
 update public.profiles set plan = 'paid' where email = 'teacher@email.com';
 
 Later, you can automate this with Mercado Pago webhooks.
+
+
+## Password + Google login update
+
+This version uses Supabase Auth with:
+- email + password sign up
+- email + password login
+- password reset email
+- optional Google OAuth login
+
+### Supabase settings needed
+
+In Supabase → Authentication → Providers:
+- Enable Email provider.
+- Enable Google only after creating Google OAuth credentials.
+
+In Supabase → Authentication → URL Configuration:
+- Site URL: `https://yl-spark-app.vercel.app`
+- Redirect URLs:
+  - `https://yl-spark-app.vercel.app`
+  - `https://yl-spark-app.vercel.app/**`
+
+For Google login, Supabase will show the callback URL to add in Google Cloud Console. It normally looks like:
+`https://YOUR-PROJECT.supabase.co/auth/v1/callback`
+
+## Images and photos
+
+This update adds visual-support sections and AI image prompts to lesson plans, activity adaptations and flashcards. It does not generate actual image files yet. Real image generation requires connecting a separate image API such as OpenAI Images, Replicate, Ideogram, or Stability, and adding cost controls.

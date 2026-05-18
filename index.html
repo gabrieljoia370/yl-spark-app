@@ -19,43 +19,69 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <!-- Decorative shapes floating behind the hero -->
-    <div class="hero-shapes" aria-hidden="true">
-      <svg class="shape shape-a" viewBox="0 0 60 60"><circle cx="30" cy="30" r="28" /></svg>
-      <svg class="shape shape-b" viewBox="0 0 60 60"><path d="M5 30 Q15 5, 30 30 T55 30" fill="none" stroke-width="6" stroke-linecap="round"/></svg>
-      <svg class="shape shape-c" viewBox="0 0 60 60"><polygon points="30,4 56,52 4,52" /></svg>
-      <svg class="shape shape-d" viewBox="0 0 60 60"><rect x="8" y="8" width="44" height="44" rx="10" /></svg>
-    </div>
+    <div class="app-shell-bg" aria-hidden="true"></div>
 
-    <header class="site-header">
-      <div class="container">
-        <p class="eyebrow">
-          <span class="logo-dot"></span> YL Spark
-        </p>
-        <h1>Plan less. <span class="hl">Play more.</span></h1>
-        <p class="lede">
-          A small set of tools to help teachers of 3–12 year olds draft lessons,
-          adapt activities and build vocab sets in seconds. Built on Cambridge YL,
-          British Council and Colorín Colorado — but it sounds like a teacher, not a textbook.
-        </p>
+    <header class="topbar">
+      <div class="container topbar-inner">
+        <a class="topbar-brand" href="./" aria-label="YL Spark home">
+          <img src="./assets/yl-spark-logo.png" alt="YL Spark logo" />
+        </a>
+        <nav class="topbar-links" aria-label="Main navigation">
+          <a href="#tools">Tools</a>
+          <a href="#pricing">Pricing</a>
+          <a href="./privacy.html">Privacy</a>
+          <a class="btn primary small" id="upgrade-link" href="#pricing">Upgrade</a>
+        </nav>
       </div>
     </header>
 
-    <section class="account-strip">
-      <div class="container account-row">
-        <div>
-          <strong id="account-status">Not signed in</strong>
-          <span id="usage-status">Sign in to use your free sparks.</span>
+    <section class="hero-pro">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="spark-pill">AI for YL & VYL teachers</span></p>
+          <h1>Plan playful English lessons in minutes.</h1>
+          <p class="lede">
+            Generate young learner lesson plans, activity adaptations and printable vocabulary sets with clear stages, teacher language, differentiation and visual support ideas.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#tools">Start planning</a>
+            <a class="btn ghost" href="#pricing">See plans</a>
+          </div>
+          <div class="trust-row" aria-label="Product highlights">
+            <span>Cambridge YL aligned</span>
+            <span>VYL friendly</span>
+            <span>Visual-first planning</span>
+          </div>
         </div>
-        <div class="account-actions">
-          <input id="auth-email" type="email" placeholder="teacher@email.com" />
-          <button class="btn ghost small" id="login-btn" type="button">Send login link</button>
-          <button class="btn ghost small" id="logout-btn" type="button" hidden>Log out</button>
-          <a class="btn primary small" id="upgrade-link" href="#pricing">Upgrade</a>
-        </div>
+
+        <aside class="auth-card" aria-label="Account panel">
+          <div class="auth-logo-wrap">
+            <img src="./assets/yl-spark-logo.png" alt="YL Spark logo" class="auth-logo" />
+          </div>
+          <div class="auth-status-box">
+            <strong id="account-status">Not signed in</strong>
+            <span id="usage-status">Create an account or sign in to use your free sparks.</span>
+          </div>
+          <div class="account-actions" id="auth-actions">
+            <label class="auth-field">
+              <span>Email</span>
+              <input id="auth-email" type="email" placeholder="teacher@email.com" autocomplete="email" />
+            </label>
+            <label class="auth-field">
+              <span>Password</span>
+              <input id="auth-password" type="password" placeholder="At least 6 characters" autocomplete="current-password" />
+            </label>
+            <div class="auth-button-grid">
+              <button class="btn primary small" id="login-btn" type="button">Log in</button>
+              <button class="btn ghost small" id="signup-btn" type="button">Create account</button>
+            </div>
+            <button class="btn google small full" id="google-btn" type="button">Continue with Google</button>
+            <button class="text-link" id="reset-btn" type="button">Reset password</button>
+            <button class="btn ghost small full" id="logout-btn" type="button" hidden>Log out</button>
+          </div>
+        </aside>
       </div>
     </section>
-
 
     <nav class="tabs" role="tablist" aria-label="Tools">
       <div class="container tabs-row">
@@ -79,7 +105,7 @@
       </div>
     </nav>
 
-    <main class="container">
+    <main class="container" id="tools">
       <!-- LESSON PLAN -->
       <section class="panel active" id="panel-lesson" role="tabpanel">
         <div class="tool-intro hue-mint">

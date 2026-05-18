@@ -45,19 +45,31 @@ function setAccountText(main, sub) {
 
 async function refreshAccountUi() {
   const emailInput = document.getElementById("auth-email");
+  const passwordInput = document.getElementById("auth-password");
   const loginBtn = document.getElementById("login-btn");
+  const signupBtn = document.getElementById("signup-btn");
+  const googleBtn = document.getElementById("google-btn");
+  const resetBtn = document.getElementById("reset-btn");
   const logoutBtn = document.getElementById("logout-btn");
 
   if (!currentSession) {
     setAccountText("Not signed in", `Sign in to use your ${appConfig.freeLimit || 3} free sparks.`);
     if (emailInput) emailInput.hidden = false;
+    if (passwordInput) passwordInput.hidden = false;
     if (loginBtn) loginBtn.hidden = false;
+    if (signupBtn) signupBtn.hidden = false;
+    if (googleBtn) googleBtn.hidden = false;
+    if (resetBtn) resetBtn.hidden = false;
     if (logoutBtn) logoutBtn.hidden = true;
     return;
   }
 
   if (emailInput) emailInput.hidden = true;
+  if (passwordInput) passwordInput.hidden = true;
   if (loginBtn) loginBtn.hidden = true;
+  if (signupBtn) signupBtn.hidden = true;
+  if (googleBtn) googleBtn.hidden = true;
+  if (resetBtn) resetBtn.hidden = true;
   if (logoutBtn) logoutBtn.hidden = false;
 
   const usage = await fetchUsage();
@@ -84,25 +96,60 @@ async function fetchUsage() {
   }
 }
 
+function getAuthFields() {
+  return {
+    email: document.getElementById("auth-email")?.value?.trim(),
+    password: document.getElementById("auth-password")?.value || "",
+  };
+}
+
+function authErrorMessage(error) {
+  if (!error) return "Something went wrong.";
+  if (/Invalid login credentials/i.test(error.message)) return "Email or password is incorrect.";
+  if (/Password should be at least/i.test(error.message)) return "Password must be at least 6 characters.";
+  return error.message || "Something went wrong.";
+}
+
 document.getElementById("login-btn")?.addEventListener("click", async () => {
-  if (!supabaseClient) {
-    toast("Login is not configured yet.");
-    return;
-  }
-  const email = document.getElementById("auth-email")?.value?.trim();
-  if (!email) {
-    toast("Enter your email first.");
-    return;
-  }
-  const { error } = await supabaseClient.auth.signInWithOtp({
+  if (!supabaseClient) return toast("Login is not configured yet.");
+  const { email, password } = getAuthFields();
+  if (!email || !password) return toast("Enter your email and password.");
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) toast(authErrorMessage(error));
+  else toast("Logged in.");
+});
+
+document.getElementById("signup-btn")?.addEventListener("click", async () => {
+  if (!supabaseClient) return toast("Login is not configured yet.");
+  const { email, password } = getAuthFields();
+  if (!email || !password) return toast("Enter your email and a password.");
+  const { error } = await supabaseClient.auth.signUp({
     email,
+    password,
     options: { emailRedirectTo: window.location.origin }
   });
-  if (error) {
-    toast(error.message);
-  } else {
-    toast("Check your email for the login link.");
-  }
+  if (error) toast(authErrorMessage(error));
+  else toast("Account created. Check your email if confirmation is required.");
+});
+
+document.getElementById("google-btn")?.addEventListener("click", async () => {
+  if (!supabaseClient) return toast("Login is not configured yet.");
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin }
+  });
+  if (error) toast(authErrorMessage(error));
+});
+
+document.getElementById("reset-btn")?.addEventListener("click", async () => {
+  if (!supabaseClient) return toast("Login is not configured yet.");
+  const { email } = getAuthFields();
+  if (!email) return toast("Enter your email first.");
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  });
+  if (error) toast(authErrorMessage(error));
+  else toast("Password reset email sent.");
 });
 
 document.getElementById("logout-btn")?.addEventListener("click", async () => {
@@ -279,6 +326,27 @@ document.getElementById("form-lesson").addEventListener("submit", async (e) => {
   }
 });
 
+
+function renderVisualSupports(v) {
+  if (!v) return "";
+  const flashcards = v.flashcardIdeas || v.imagesOrFlashcards || [];
+  const imagePrompts = v.imagePrompts || [];
+  const noPrep = v.noPrepAlternatives || v.noPrepVisuals || [];
+  return `
+    <h3>Visual supports</h3>
+    <div class="visual-supports">
+      ${v.boardPicture ? `<div class="visual-card"><strong>Board picture</strong><p>${escapeHtml(v.boardPicture)}</p></div>` : ""}
+      ${flashcards.length ? `<div class="visual-card"><strong>Picture / flashcard ideas</strong><ul>${flashcards.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul></div>` : ""}
+      ${imagePrompts.length ? `<div class="visual-card"><strong>AI image prompts</strong><ul>${imagePrompts.map((x) => `<li><code>${escapeHtml(x)}</code></li>`).join("")}</ul><p class="hint">Copy these into Canva, Adobe Express, Ideogram, DALL·E or another image tool.</p></div>` : ""}
+      ${noPrep.length ? `<div class="visual-card"><strong>No-print options</strong><ul>${noPrep.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul></div>` : ""}
+    </div>`;
+}
+
+function renderImagePrompt(prompt) {
+  if (!prompt) return "";
+  return `<div class="image-prompt"><strong>Image prompt:</strong> ${escapeHtml(prompt)}</div>`;
+}
+
 function renderLesson(inputs, plan) {
   const out = document.getElementById("output-lesson");
   out.hidden = false;
@@ -310,6 +378,7 @@ function renderLesson(inputs, plan) {
     ${plan.overallAim ? `<p><strong>Overall aim:</strong> ${escapeHtml(plan.overallAim)}</p>` : ""}
     ${plan.materials ? `<p><strong>Materials:</strong> ${escapeHtml(plan.materials)}</p>` : ""}
     ${plan.targetLanguage ? `<p><strong>Target language:</strong> ${escapeHtml(plan.targetLanguage)}</p>` : ""}
+    ${renderVisualSupports(plan.visualSupports)}
     <h3>Lesson stages</h3>
     ${stages}
     ${plan.differentiation ? `<h3>Differentiation</h3><p>${escapeHtml(plan.differentiation)}</p>` : ""}
@@ -360,6 +429,7 @@ function renderAdapter(inputs, r) {
     <h3>Adapted version</h3>
     <p>${escapeHtml(r.adapted || "")}</p>
     ${r.steps ? `<h3>Step by step</h3><ol>${r.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>` : ""}
+    ${renderVisualSupports(r.visualSupports)}
     ${r.scaffolding ? `<h3>Scaffolding tips</h3><ul>${r.scaffolding.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul>` : ""}
     ${r.variations ? `<h3>Variations</h3><ul>${r.variations.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ul>` : ""}
     ${r.watchOuts ? `<h3>Things to watch for</h3><p>${escapeHtml(r.watchOuts)}</p>` : ""}
@@ -400,6 +470,7 @@ function renderFlashcards(inputs, r) {
         <div class="word">${escapeHtml(c.word || "")}</div>
         ${c.partOfSpeech ? `<div class="pos">${escapeHtml(c.partOfSpeech)}</div>` : ""}
         ${c.sentence ? `<div class="sentence">${escapeHtml(c.sentence)}</div>` : ""}
+        ${renderImagePrompt(c.imagePrompt)}
       </div>`
     )
     .join("");
