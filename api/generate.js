@@ -43,35 +43,66 @@ Context:
 - Target language: ${i.targetLanguage}
 - Teacher notes: ${i.notes || "(none)"}
 
-Return JSON with this exact shape:
+Return ONLY a valid JSON object. Do not include markdown. Do not include explanations outside JSON.
+All property names and string values must use double quotes.
+Do not use trailing commas.
+Do not use ellipses or placeholder values such as "...".
+
+Use this exact structure:
 {
   "title": "A clear, kid-friendly lesson title",
-  "overallAim": "By the end of the lesson, students will be able to ...",
-  "targetLanguage": "The vocabulary/structures recycled across the lesson",
+  "overallAim": "By the end of the lesson, students will be able to use the target language in a simple classroom task.",
+  "targetLanguage": "The vocabulary or structures recycled across the lesson",
   "materials": "Comma-separated list. Mark printables with (printable). Suggest no-print alternatives where possible.",
   "visualSupports": {
-    "boardPicture": "Describe one simple board picture or visual scene the teacher can draw/use.",
-    "flashcardIdeas": ["Flashcard/image idea 1", "Flashcard/image idea 2", "Flashcard/image idea 3"],
-    "imagePrompts": ["Prompt for a child-friendly classroom image/flashcard", "Prompt for another image"],
+    "boardPicture": "Describe one simple board picture or visual scene the teacher can draw or use.",
+    "flashcardIdeas": ["Flashcard or image idea 1", "Flashcard or image idea 2", "Flashcard or image idea 3"],
+    "imagePrompts": ["Prompt for a child-friendly classroom image or flashcard", "Prompt for another image"],
     "noPrepAlternatives": ["How to teach this visually without printing", "Another no-prep visual option"]
   },
   "stages": [
     {
       "name": "Warmer / Routine",
       "minutes": "5",
-      "aim": "Settle and activate prior knowledge",
-      "steps": ["Step 1 in plain language", "Step 2", "..."],
+      "aim": "Settle learners and activate prior knowledge",
+      "steps": ["Step 1 in plain language", "Step 2 in plain language"],
       "teacherLanguage": "Example phrases the teacher will say"
     },
-    { "name": "Presentation / Lead-in", "minutes": "...", "aim": "...", "steps": [...], "teacherLanguage": "..." },
-    { "name": "Controlled practice", "minutes": "...", "aim": "...", "steps": [...], "teacherLanguage": "..." },
-    { "name": "Freer practice / Production", "minutes": "...", "aim": "...", "steps": [...], "teacherLanguage": "..." },
-    { "name": "Cooler / Wrap-up", "minutes": "...", "aim": "...", "steps": [...], "teacherLanguage": "..." }
+    {
+      "name": "Presentation / Lead-in",
+      "minutes": "8",
+      "aim": "Introduce the target language in context",
+      "steps": ["Step 1 in plain language", "Step 2 in plain language"],
+      "teacherLanguage": "Example phrases the teacher will say"
+    },
+    {
+      "name": "Controlled practice",
+      "minutes": "10",
+      "aim": "Help learners practise the target language accurately",
+      "steps": ["Step 1 in plain language", "Step 2 in plain language"],
+      "teacherLanguage": "Example phrases the teacher will say"
+    },
+    {
+      "name": "Freer practice / Production",
+      "minutes": "12",
+      "aim": "Help learners use the language more independently",
+      "steps": ["Step 1 in plain language", "Step 2 in plain language"],
+      "teacherLanguage": "Example phrases the teacher will say"
+    },
+    {
+      "name": "Cooler / Wrap-up",
+      "minutes": "5",
+      "aim": "Review learning and close the lesson calmly",
+      "steps": ["Step 1 in plain language", "Step 2 in plain language"],
+      "teacherLanguage": "Example phrases the teacher will say"
+    }
   ],
   "differentiation": "How to support stronger and weaker learners in the same class",
   "assessment": "A quick formative check the teacher can use in class",
   "homework": "Optional, short, fun, parent-friendly"
-}`,
+}
+
+Make sure the stages add up roughly to the lesson duration. For VYL, keep individual stages short and active. For all stages, include visual support, movement, modelling, and child-friendly teacher language.`,
 
   adapter: (i) => `Adapt the following classroom activity for English learners.
 
@@ -129,7 +160,25 @@ function buildPrompt(type, inputs) {
 }
 
 function extractJson(text) {
-  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  if (!text || typeof text !== "string") {
+    throw new Error("Empty model response.");
+  }
+
+  let cleaned = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
+
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
+  }
+
+  cleaned = cleaned.replace(/,\s*([}\]])/g, "$1");
+
   return JSON.parse(cleaned);
 }
 
@@ -245,7 +294,8 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2800,
+        max_tokens: 3500,
+        temperature: 0,
         system: BASE_SYSTEM,
         messages: [{ role: "user", content: prompt }],
       }),
@@ -265,7 +315,10 @@ module.exports = async function handler(req, res) {
     try {
       parsed = extractJson(text);
     } catch (_) {
-      return res.status(502).json({ error: "Model didn't return valid JSON.", raw: text.slice(0, 400) });
+      return res.status(502).json({
+        error: "Model didn't return valid JSON. Please try again with a shorter topic/notes.",
+        raw: text.slice(0, 400)
+      });
     }
 
     await incrementUsage(user.id);
