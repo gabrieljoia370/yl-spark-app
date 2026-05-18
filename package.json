@@ -1,0 +1,9 @@
+{
+  "name": "yl-spark",
+  "version": "1.0.0",
+  "description": "Lesson drafts for English teachers of young learners.",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800&family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&display=swap"
+      rel="stylesheet"
+    />
+    <title>YL Spark — Lesson ideas for young learner classrooms</title>
+    <meta
+      name="description"
+      content="Quick, classroom-ready lesson plans, activity adaptations and vocab sets for English teachers of 3–12 year olds. Built on Cambridge YL, British Council and Colorín Colorado."
+    />
+    <meta name="theme-color" content="#01696F" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- Decorative shapes floating behind the hero -->
+    <div class="hero-shapes" aria-hidden="true">
+      <svg class="shape shape-a" viewBox="0 0 60 60"><circle cx="30" cy="30" r="28" /></svg>
+      <svg class="shape shape-b" viewBox="0 0 60 60"><path d="M5 30 Q15 5, 30 30 T55 30" fill="none" stroke-width="6" stroke-linecap="round"/></svg>
+      <svg class="shape shape-c" viewBox="0 0 60 60"><polygon points="30,4 56,52 4,52" /></svg>
+      <svg class="shape shape-d" viewBox="0 0 60 60"><rect x="8" y="8" width="44" height="44" rx="10" /></svg>
+    </div>
+
+    <header class="site-header">
+      <div class="container">
+        <p class="eyebrow">
+          <span class="logo-dot"></span> YL Spark
+        </p>
+        <h1>Plan less. <span class="hl">Play more.</span></h1>
+        <p class="lede">
+          A small set of tools to help teachers of 3–12 year olds draft lessons,
+          adapt activities and build vocab sets in seconds. Built on Cambridge YL,
+          British Council and Colorín Colorado — but it sounds like a teacher, not a textbook.
+        </p>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Tools">
+      <div class="container tabs-row">
+        <button class="tab active" data-tab="lesson" role="tab" aria-selected="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>
+          <span>Lesson plan</span>
+        </button>
+        <button class="tab" data-tab="adapter" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg>
+          <span>Adapt activity</span>
+        </button>
+        <button class="tab" data-tab="flashcards" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/></svg>
+          <span>Flashcards</span>
+        </button>
+        <button class="tab" data-tab="library" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          <span>Saved</span>
+          <span class="badge" id="lib-count">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="container">
+      <!-- LESSON PLAN -->
+      <section class="panel active" id="panel-lesson" role="tabpanel">
+        <div class="tool-intro hue-mint">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4z"/><path d="M8 8h6M8 12h6M8 16h4"/></svg>
+          </div>
+          <div>
+            <h2>Spark a full lesson</h2>
+            <p>Tell me about your class — age, level, topic, time. I'll draft a complete lesson with warmer, presentation, controlled and freer practice, and a cooler. Plus teacher language, materials, and a quick check.</p>
+          </div>
+        </div>
+
+        <form class="form" id="form-lesson">
+          <div class="grid">
+            <label>
+              Who's the class?
+              <select name="ageGroup" required>
+                <option value="VYL 3-6">Very young learners (3–6)</option>
+                <option value="YL 7-9" selected>Young learners (7–9)</option>
+                <option value="YL 10-12">Young learners (10–12)</option>
+              </select>
+            </label>
+            <label>
+              What level?
+              <select name="level" required>
+                <option value="Pre-A1 (Starters)">Pre-A1 · Starters</option>
+                <option value="A1 (Movers)" selected>A1 · Movers</option>
+                <option value="A2 (Flyers)">A2 · Flyers</option>
+                <option value="B1">B1</option>
+              </select>
+            </label>
+            <label>
+              How long?
+              <select name="duration" required>
+                <option value="30 minutes">30 min</option>
+                <option value="45 minutes" selected>45 min</option>
+                <option value="60 minutes">60 min</option>
+                <option value="90 minutes">90 min</option>
+              </select>
+            </label>
+            <label>
+              How big?
+              <select name="classSize" required>
+                <option value="small (under 8)">Small (under 8)</option>
+                <option value="medium (8–15)" selected>Medium (8–15)</option>
+                <option value="large (15+)">Large (15+)</option>
+              </select>
+            </label>
+          </div>
+          <label>
+            What's the topic?
+            <input type="text" name="topic" placeholder="e.g. zoo animals · my family · weather today" required />
+          </label>
+          <label>
+            Target language (vocab, structures, or function)
+            <input
+              type="text"
+              name="targetLanguage"
+              placeholder="e.g. 8 animal words + “I can see a ___”"
+              required
+            />
+          </label>
+          <label>
+            Anything to keep in mind? <span class="optional">(optional)</span>
+            <textarea
+              name="notes"
+              rows="2"
+              placeholder="Mixed ability · no printer today · they love TPR · Daniel needs extra support"
+            ></textarea>
+          </label>
+          <div class="actions">
+            <button type="submit" class="btn primary">Spark my lesson</button>
+            <span class="hint">Usually ready in 10–20 seconds.</span>
+          </div>
+        </form>
+        <div class="output" id="output-lesson" hidden></div>
+      </section>
+
+      <!-- ACTIVITY ADAPTER -->
+      <section class="panel" id="panel-adapter" role="tabpanel" hidden>
+        <div class="tool-intro hue-peach">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg>
+          </div>
+          <div>
+            <h2>Adapt any activity</h2>
+            <p>Paste an activity from your coursebook (or memory). I'll reshape it for your age and level — simpler, more physical, more visual, or scaffolded for mixed ability.</p>
+          </div>
+        </div>
+
+        <form class="form" id="form-adapter">
+          <label>
+            Paste the activity you want to adapt
+            <textarea
+              name="activity"
+              rows="6"
+              placeholder="e.g. Students read a short text about jobs, then complete a gap-fill with the new vocabulary."
+              required
+            ></textarea>
+          </label>
+          <div class="grid">
+            <label>
+              Who's the class?
+              <select name="ageGroup" required>
+                <option value="VYL 3-6">Very young learners (3–6)</option>
+                <option value="YL 7-9" selected>Young learners (7–9)</option>
+                <option value="YL 10-12">Young learners (10–12)</option>
+              </select>
+            </label>
+            <label>
+              What level?
+              <select name="level" required>
+                <option value="Pre-A1 (Starters)">Pre-A1 · Starters</option>
+                <option value="A1 (Movers)" selected>A1 · Movers</option>
+                <option value="A2 (Flyers)">A2 · Flyers</option>
+                <option value="B1">B1</option>
+              </select>
+            </label>
+            <label>
+              What do you want changed?
+              <select name="goal" required>
+                <option value="simplify" selected>Simplify (lower / younger)</option>
+                <option value="extend">Extend (higher / older)</option>
+                <option value="more physical / TPR">Make it more physical / TPR</option>
+                <option value="more visual">Make it more visual</option>
+                <option value="scaffold for mixed ability or SEN">Scaffold for mixed ability / SEN</option>
+                <option value="make it more communicative">Make it more communicative</option>
+              </select>
+            </label>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary">Adapt it for me</button>
+            <span class="hint">Usually ready in 10–15 seconds.</span>
+          </div>
+        </form>
+        <div class="output" id="output-adapter" hidden></div>
+      </section>
+
+      <!-- FLASHCARDS -->
+      <section class="panel" id="panel-flashcards" role="tabpanel" hidden>
+        <div class="tool-intro hue-sky">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="14" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v12"/></svg>
+          </div>
+          <div>
+            <h2>Build a vocab set</h2>
+            <p>Pick a topic. Get printable flashcards with kid-friendly example sentences, a chant or song hook, and three classroom games you can use right away.</p>
+          </div>
+        </div>
+
+        <form class="form" id="form-flashcards">
+          <label>
+            What's the topic?
+            <input type="text" name="topic" placeholder="e.g. food and drinks · daily routines · body parts" required />
+          </label>
+          <div class="grid">
+            <label>
+              Who's the class?
+              <select name="ageGroup" required>
+                <option value="VYL 3-6">Very young learners (3–6)</option>
+                <option value="YL 7-9" selected>Young learners (7–9)</option>
+                <option value="YL 10-12">Young learners (10–12)</option>
+              </select>
+            </label>
+            <label>
+              What level?
+              <select name="level" required>
+                <option value="Pre-A1 (Starters)">Pre-A1 · Starters</option>
+                <option value="A1 (Movers)" selected>A1 · Movers</option>
+                <option value="A2 (Flyers)">A2 · Flyers</option>
+                <option value="B1">B1</option>
+              </select>
+            </label>
+            <label>
+              How many cards?
+              <select name="count" required>
+                <option value="8">8</option>
+                <option value="12" selected>12</option>
+                <option value="16">16</option>
+                <option value="24">24</option>
+              </select>
+            </label>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn primary">Make my set</button>
+            <span class="hint">Cards + chant + 3 mini-games.</span>
+          </div>
+        </form>
+        <div class="output" id="output-flashcards" hidden></div>
+      </section>
+
+      <!-- LIBRARY -->
+      <section class="panel" id="panel-library" role="tabpanel" hidden>
+        <div class="tool-intro hue-lilac">
+          <div class="tool-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div>
+            <h2>Your saved sparks</h2>
+            <p>Every lesson, adaptation and set you save lives here — on your device, not on a server. Open them, copy them, print them, or come back next term.</p>
+          </div>
+        </div>
+
+        <div class="library-toolbar">
+          <input type="search" id="lib-search" placeholder="Search your saved sparks…" />
+          <button class="btn ghost" id="lib-clear">Clear all</button>
+        </div>
+        <div id="library-list" class="library-list"></div>
+        <p class="empty-state" id="library-empty" hidden>
+          Nothing saved yet. Generate a lesson, adaptation or vocab set, then hit <strong>Save</strong>.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          <strong>YL Spark</strong> · A small tool for teachers juggling crayons, songs and CEFR.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Loading overlay -->
+    <div class="loader" id="loader" hidden>
+      <div class="loader-card">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loader-text">Drafting your lesson…</p>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
