@@ -1383,3 +1383,67 @@ main.container {
 .pdf-export .image-actions-box {
   display: none;
 }
+
+
+/* === PDF BLANK PAGE FIX === */
+/* The previous export layer was too far off-screen, which can make html2canvas export a blank PDF. */
+body.is-exporting-pdf > *:not(.pdf-page):not(.toast) {
+  visibility: hidden !important;
+}
+
+.pdf-page {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 794px !important;
+  min-height: 1123px !important;
+  background: #ffffff !important;
+  color: #28251d !important;
+  padding: 28px !important;
+  z-index: 999999 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.pdf-page * {
+  visibility: visible !important;
+}
+
+.pdf-export {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.pdf-export .output-toolbar,
+.pdf-export .image-actions-box,
+.pdf-export .flashcard-image-status {
+  display: none !important;
+}
+
+.pdf-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  border-bottom: 1px solid #ece6d8 !important;
+  padding-bottom: 14px !important;
+  margin-bottom: 18px !important;
+}
+
+.pdf-brand img {
+  width: 86px !important;
+  height: auto !important;
+}
+
+.pdf-brand strong {
+  display: block !important;
+  font-size: 22px !important;
+  color: #014a4e !important;
+}
+
+.pdf-brand span {
+  display: block !important;
+  font-size: 13px !important;
+  color: #6f6b62 !important;
+}
