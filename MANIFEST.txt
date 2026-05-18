@@ -1,4 +1,4 @@
-YL Spark PDF Blank Fix Full Package
+YL Spark Reliable PDF Full Package
 
 FILES:
 MANIFEST.txt
@@ -6,7 +6,7 @@ README-COMMERCIAL-MVP.md
 README-JSON-FIX.txt
 README-MANUAL-IMAGES-PDF.txt
 README-MERCADOPAGO-SETUP.txt
-README-PDF-BLANK-FIX.txt
+README-RELIABLE-PDF.txt
 README-UPLOAD-FIRST.txt
 api/config.js
 api/create-checkout.js

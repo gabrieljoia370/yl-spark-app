@@ -698,7 +698,7 @@ function wireToolbar(outputEl, item) {
       } else if (act === "copy") {
         copyOutput(outputEl);
       } else if (act === "pdf") {
-        downloadOutputPdf(outputEl, item);
+        openPdfPrintWindow(outputEl, item);
       } else if (act === "print") {
         window.print();
       }
@@ -766,6 +766,226 @@ async function downloadOutputPdf(outputEl, item) {
     wrapper.remove();
   }
 }
+
+
+function openPdfPrintWindow(outputEl, item) {
+  const clone = outputEl.cloneNode(true);
+  clone.querySelectorAll(".output-toolbar, .image-actions-box, .flashcard-image-status, .image-prompt").forEach((n) => n.remove());
+
+  const title = item?.title || "YL Spark material";
+  const printableHtml = `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    :root {
+      --teal: #01696f;
+      --teal-dark: #014a4e;
+      --teal-soft: #e6f1f2;
+      --ink: #28251d;
+      --muted: #6f6b62;
+      --line: #ece6d8;
+      --bg: #fcf8ef;
+      --card: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 28px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: white;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
+    .pdf-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+    }
+
+    .pdf-brand img {
+      width: 90px;
+      height: auto;
+      display: block;
+    }
+
+    .pdf-brand strong {
+      display: block;
+      font-size: 24px;
+      color: var(--teal-dark);
+      line-height: 1.1;
+    }
+
+    .pdf-brand span {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    h2 {
+      font-size: 26px;
+      margin: 0 0 10px;
+      color: var(--teal-dark);
+    }
+
+    h3 {
+      font-size: 18px;
+      margin: 22px 0 8px;
+      color: var(--teal-dark);
+    }
+
+    h4 {
+      font-size: 15px;
+      margin: 16px 0 4px;
+    }
+
+    p { margin: 7px 0; }
+
+    ul, ol {
+      margin: 7px 0;
+      padding-left: 22px;
+    }
+
+    li { margin: 4px 0; }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 8px 0 14px;
+    }
+
+    .chip {
+      background: var(--teal-soft);
+      color: var(--teal-dark);
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .stage, .visual-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 10px 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .flashcard {
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .flashcard-image-wrap,
+    .flashcard-image-placeholder {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #f7fbfb;
+      display: grid;
+      place-items: center;
+      margin-bottom: 10px;
+    }
+
+    .flashcard-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .word {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--teal-dark);
+      margin-bottom: 4px;
+    }
+
+    .pos {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .sentence {
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .hint, .output-toolbar, .image-actions-box, .image-prompt, .flashcard-image-status {
+      display: none !important;
+    }
+
+    @page {
+      size: A4;
+      margin: 12mm;
+    }
+
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="pdf-brand">
+    <img src="${location.origin}/assets/yl-spark-logo.png" alt="YL Spark">
+    <div>
+      <strong>YL Spark</strong>
+      <span>Materiales de Clase para Young Learners</span>
+    </div>
+  </div>
+
+  ${clone.innerHTML}
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 500);
+    };
+  </script>
+</body>
+</html>
+`;
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    toast("Popup blocked. Please allow popups to download/print the PDF.");
+    return;
+  }
+
+  win.document.open();
+  win.document.write(printableHtml);
+  win.document.close();
+
+  toast("PDF page opened. Choose 'Save as PDF' in the print dialog.");
+}
+
 
 /* ---------- Saved library ---------- */
 function loadLibrary() {
