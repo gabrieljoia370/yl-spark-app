@@ -1135,7 +1135,7 @@ main.container {
 }
 
 
-/* Flashcards with generated images */
+/* === FINAL: flashcard images + PDF export === */
 .visual-flashcard {
   display: flex;
   flex-direction: column;
@@ -1168,8 +1168,13 @@ main.container {
   padding: 12px;
 }
 
+.image-failed span {
+  color: var(--danger);
+}
+
 .flashcard-image-status {
   min-height: 20px;
+  margin-top: -4px;
 }
 
 .image-prompt {
@@ -1181,14 +1186,69 @@ main.container {
   margin-top: 4px;
 }
 
+.pdf-page {
+  position: fixed;
+  left: -99999px;
+  top: 0;
+  width: 794px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 28px;
+  z-index: -1;
+}
+
+.pdf-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+}
+
+.pdf-brand img {
+  width: 86px;
+  height: auto;
+}
+
+.pdf-brand strong {
+  display: block;
+  font-size: 22px;
+  color: var(--teal-dark);
+}
+
+.pdf-brand span {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pdf-export {
+  margin-top: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.pdf-export .flashcard,
+.pdf-export .stage,
+.pdf-export .visual-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-export .cards-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.pdf-export .image-prompt,
+.pdf-export .flashcard-image-status {
+  display: none;
+}
+
 @media print {
   .image-prompt,
   .flashcard-image-status {
     display: none !important;
-  }
-
-  .flashcard-image-wrap,
-  .flashcard-image-placeholder {
-    border: 1px solid #000;
   }
 }

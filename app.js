@@ -144,6 +144,7 @@ async function refreshAccountUi() {
   if (logoutBtn) logoutBtn.hidden = false;
 
   const usage = await fetchUsage();
+  appConfig.plan = usage.plan || "free";
   const email = currentSession.user?.email || "Signed in";
   if (usage.plan === "paid") {
     setAccountText(email, "Teacher Plan active · unlimited generations.");
@@ -423,66 +424,76 @@ function getFlashcardImageSrc(card) {
   return card.imageBase64 || card.imageUrl || "";
 }
 
-function renderFlashcardImage(card) {
+function renderFlashcardImage(card, index) {
   const src = getFlashcardImageSrc(card);
   if (src) {
-    return `<div class="flashcard-image-wrap"><img class="flashcard-image" src="${escapeHtml(src)}" alt="${escapeHtml(card.word || "Flashcard image")}" loading="lazy"></div>`;
+    return `<div class="flashcard-image-wrap" data-image-slot="${index}"><img class="flashcard-image" src="${escapeHtml(src)}" alt="${escapeHtml(card.word || "Flashcard image")}" loading="lazy"></div>`;
   }
-  return `<div class="flashcard-image-placeholder"><span>Image will appear here</span></div>`;
+  return `<div class="flashcard-image-placeholder" data-image-slot="${index}"><span>Image will appear here</span></div>`;
 }
 
-async function generateFlashcardImages(inputs, result) {
-  if (!result || !Array.isArray(result.cards) || result.cards.length === 0) return result;
+async function generateImagesForRenderedFlashcards(inputs, result) {
+  if (!result?.cards?.length) return;
 
-  const cardsToImage = result.cards.map((card) => ({
-    word: card.word || "",
-    sentence: card.sentence || "",
-    imagePrompt: card.imagePrompt || "",
-  }));
+  const status = document.getElementById("flashcard-image-status");
+  const maxImages = appConfig.plan === "paid" ? 12 : 4;
+  const cardsToGenerate = result.cards.slice(0, maxImages);
 
-  const imageNotice = document.getElementById("flashcard-image-status");
-  if (imageNotice) imageNotice.textContent = "Generating flashcard images…";
+  if (status) status.textContent = `Generating ${cardsToGenerate.length} flashcard image${cardsToGenerate.length === 1 ? "" : "s"}…`;
 
-  try {
-    const res = await fetch(IMAGE_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${currentSession?.access_token || ""}`,
-      },
-      body: JSON.stringify({
-        topic: inputs.topic,
-        ageGroup: inputs.ageGroup,
-        level: inputs.level,
-        cards: cardsToImage,
-      }),
-    });
+  let generated = 0;
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.error || "Could not generate images.");
+  for (let i = 0; i < cardsToGenerate.length; i++) {
+    const card = cardsToGenerate[i];
 
-    const imageMap = new Map((data.images || []).map((img) => [String(img.word || "").toLowerCase(), img]));
-    result.cards = result.cards.map((card) => {
-      const match = imageMap.get(String(card.word || "").toLowerCase());
-      return {
-        ...card,
-        imageUrl: match?.imageUrl || card.imageUrl || "",
-        imageBase64: match?.imageBase64 || card.imageBase64 || "",
-      };
-    });
+    try {
+      const res = await fetch(IMAGE_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentSession?.access_token || ""}`,
+        },
+        body: JSON.stringify({
+          topic: inputs.topic,
+          ageGroup: inputs.ageGroup,
+          level: inputs.level,
+          card: {
+            word: card.word || "",
+            sentence: card.sentence || "",
+            imagePrompt: card.imagePrompt || "",
+          },
+        }),
+      });
 
-    if (data.limited && imageNotice) {
-      imageNotice.textContent = `Free image preview: ${data.maxImages} images generated. Upgrade for more images per set.`;
-    } else if (imageNotice) {
-      imageNotice.textContent = "Images added.";
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Image request failed (${res.status})`);
+
+      result.cards[i].imageUrl = data.imageUrl || "";
+      result.cards[i].imageBase64 = data.imageBase64 || "";
+
+      const src = result.cards[i].imageBase64 || result.cards[i].imageUrl;
+      const slot = document.querySelector(`[data-image-slot="${i}"]`);
+
+      if (slot && src) {
+        slot.outerHTML = `<div class="flashcard-image-wrap" data-image-slot="${i}"><img class="flashcard-image" src="${escapeHtml(src)}" alt="${escapeHtml(result.cards[i].word || "Flashcard image")}" loading="lazy"></div>`;
+      }
+
+      generated++;
+      if (status) status.textContent = `Generated ${generated}/${cardsToGenerate.length} flashcard images…`;
+    } catch (err) {
+      const slot = document.querySelector(`[data-image-slot="${i}"]`);
+      if (slot) {
+        slot.classList.add("image-failed");
+        slot.innerHTML = `<span>Image failed: ${escapeHtml(err.message || "error")}</span>`;
+      }
+      if (status) status.textContent = `Image generation error: ${err.message || "Unknown error"}`;
     }
+  }
 
-    return result;
-  } catch (err) {
-    if (imageNotice) {
-      imageNotice.textContent = `Images could not be generated: ${err.message}. The flashcards still include image ideas.`;
-    }
-    return result;
+  if (status && generated > 0) {
+    status.textContent = result.cards.length > maxImages
+      ? `Images added to ${generated} cards. Free preview shows ${maxImages}; upgrade for full sets.`
+      : `Images added to ${generated} cards.`;
   }
 }
 
@@ -505,6 +516,7 @@ function renderLesson(inputs, plan) {
     <div class="output-toolbar">
       <button class="btn ghost small" data-act="save">Save</button>
       <button class="btn ghost small" data-act="copy">Copy</button>
+      <button class="btn ghost small" data-act="pdf">Download PDF</button>
       <button class="btn ghost small" data-act="print">Print</button>
     </div>
     <h2>${escapeHtml(plan.title || inputs.topic)}</h2>
@@ -557,6 +569,7 @@ function renderAdapter(inputs, r) {
     <div class="output-toolbar">
       <button class="btn ghost small" data-act="save">Save</button>
       <button class="btn ghost small" data-act="copy">Copy</button>
+      <button class="btn ghost small" data-act="pdf">Download PDF</button>
       <button class="btn ghost small" data-act="print">Print</button>
     </div>
     <h2>${escapeHtml(r.title || "Adapted activity")}</h2>
@@ -590,10 +603,9 @@ document.getElementById("form-flashcards").addEventListener("submit", async (e) 
   showOutputLoading("flashcards", "Building your vocab set… usually takes 10–15 seconds.");
   try {
     const { result } = await callApi({ type: "flashcards", inputs });
-    renderFlashcards(inputs, result, { loadingImages: true });
-    const resultWithImages = await generateFlashcardImages(inputs, result);
-    renderFlashcards(inputs, resultWithImages);
+    renderFlashcards(inputs, result);
     await refreshAccountUi();
+    await generateImagesForRenderedFlashcards(inputs, result);
   } catch (err) {
     showError("flashcards", err.message);
   } finally {
@@ -601,14 +613,14 @@ document.getElementById("form-flashcards").addEventListener("submit", async (e) 
   }
 });
 
-function renderFlashcards(inputs, r, options = {}) {
+function renderFlashcards(inputs, r) {
   const out = document.getElementById("output-flashcards");
   out.hidden = false;
   const cards = (r.cards || [])
     .map(
-      (c) => `
+      (c, index) => `
       <div class="flashcard visual-flashcard">
-        ${renderFlashcardImage(c)}
+        ${renderFlashcardImage(c, index)}
         <div class="word">${escapeHtml(c.word || "")}</div>
         ${c.partOfSpeech ? `<div class="pos">${escapeHtml(c.partOfSpeech)}</div>` : ""}
         ${c.sentence ? `<div class="sentence">${escapeHtml(c.sentence)}</div>` : ""}
@@ -620,6 +632,7 @@ function renderFlashcards(inputs, r, options = {}) {
     <div class="output-toolbar">
       <button class="btn ghost small" data-act="save">Save</button>
       <button class="btn ghost small" data-act="copy">Copy</button>
+      <button class="btn ghost small" data-act="pdf">Download PDF</button>
       <button class="btn ghost small" data-act="print">Print</button>
     </div>
     <h2>${escapeHtml(r.title || inputs.topic)}</h2>
@@ -629,7 +642,7 @@ function renderFlashcards(inputs, r, options = {}) {
       <span class="chip">${(r.cards || []).length} items</span>
     </div>
     <h3>Vocabulary set</h3>
-    <p class="hint flashcard-image-status" id="flashcard-image-status">${options.loadingImages ? "Generating flashcard images…" : ""}</p>
+    <p class="hint flashcard-image-status" id="flashcard-image-status"></p>
     <div class="cards-grid">${cards}</div>
     ${r.chant ? `<h3>Chant / song hook</h3><p><em>${escapeHtml(r.chant)}</em></p>` : ""}
     ${r.games ? `<h3>Mini-games</h3><ul>${r.games.map((g) => `<li><strong>${escapeHtml(g.name || "")}:</strong> ${escapeHtml(g.howTo || "")}</li>`).join("")}</ul>` : ""}
@@ -651,6 +664,8 @@ function wireToolbar(outputEl, item) {
         saveToLibrary(item);
       } else if (act === "copy") {
         copyOutput(outputEl);
+      } else if (act === "pdf") {
+        downloadOutputPdf(outputEl, item);
       } else if (act === "print") {
         window.print();
       }
@@ -787,7 +802,7 @@ function renderItemBody(item) {
         ${(r.cards || [])
           .map(
             (c) =>
-              `<div class="flashcard visual-flashcard">${renderFlashcardImage(c)}<div class="word">${escapeHtml(c.word || "")}</div>${
+              `<div class="flashcard"><div class="word">${escapeHtml(c.word || "")}</div>${
                 c.sentence ? `<div class="sentence">${escapeHtml(c.sentence)}</div>` : ""
               }</div>`
           )
