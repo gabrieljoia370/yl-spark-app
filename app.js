@@ -143,6 +143,41 @@ function escapeHtml(s) {
   }[c]));
 }
 
+
+function renderVisualSupports(v) {
+  if (!v) return "";
+  const flashcards = (v.printableFlashcards || [])
+    .map(
+      (c) => `
+      <div class="visual-card">
+        <div class="visual-thumb" aria-hidden="true">🖼️</div>
+        <div>
+          <strong>${escapeHtml(c.label || "Visual")}</strong>
+          <p>${escapeHtml(c.imageIdea || "")}</p>
+        </div>
+      </div>`
+    )
+    .join("");
+
+  const prompts = (v.picturePrompts || [])
+    .map((p) => `<li>${escapeHtml(p)}</li>`)
+    .join("");
+
+  const noPrep = (v.noPrepVisuals || [])
+    .map((p) => `<li>${escapeHtml(p)}</li>`)
+    .join("");
+
+  return `
+    <h3>Visual supports</h3>
+    <div class="visual-supports">
+      ${v.boardPicture ? `<div class="visual-box"><strong>Board picture</strong><p>${escapeHtml(v.boardPicture)}</p></div>` : ""}
+      ${flashcards ? `<div class="visual-grid">${flashcards}</div>` : ""}
+      ${prompts ? `<div class="visual-box"><strong>Image prompts for Canva / AI image tools</strong><ol>${prompts}</ol></div>` : ""}
+      ${noPrep ? `<div class="visual-box"><strong>No-prep visual alternatives</strong><ul>${noPrep}</ul></div>` : ""}
+    </div>
+  `;
+}
+
 /* ---------- LESSON PLAN ---------- */
 document.getElementById("form-lesson").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -190,6 +225,7 @@ function renderLesson(inputs, plan) {
     ${plan.overallAim ? `<p><strong>Overall aim:</strong> ${escapeHtml(plan.overallAim)}</p>` : ""}
     ${plan.materials ? `<p><strong>Materials:</strong> ${escapeHtml(plan.materials)}</p>` : ""}
     ${plan.targetLanguage ? `<p><strong>Target language:</strong> ${escapeHtml(plan.targetLanguage)}</p>` : ""}
+    ${renderVisualSupports(plan.visualSupports)}
     <h3>Lesson stages</h3>
     ${stages}
     ${plan.differentiation ? `<h3>Differentiation</h3><p>${escapeHtml(plan.differentiation)}</p>` : ""}
@@ -426,6 +462,7 @@ function renderItemBody(item) {
     const r = item.result;
     return `
       ${r.overallAim ? `<p><strong>Overall aim:</strong> ${escapeHtml(r.overallAim)}</p>` : ""}
+      ${renderVisualSupports(r.visualSupports)}
       ${(r.stages || [])
         .map(
           (s) => `<h4>${escapeHtml(s.name)} · ${escapeHtml(s.minutes || "")} min</h4>
