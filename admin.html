@@ -36,70 +36,291 @@
     <section class="admin-card" id="admin-panel" hidden>
       <div class="admin-topline">
         <div>
-          <h2>Site settings</h2>
-          <p>Edit the visible layout safely.</p>
+          <h2>Visual Builder</h2>
+          <p>Edit the UI safely. Every change is saved in Supabase and loaded by the public page.</p>
         </div>
         <button class="btn ghost" id="admin-logout-btn">Logout</button>
       </div>
 
-      <div class="admin-grid two">
-        <label>Hero title
-          <input id="heroTitle" type="text" />
-        </label>
+      <div class="builder-tabs">
+        <button class="builder-tab active" data-builder-tab="content">Content</button>
+        <button class="builder-tab" data-builder-tab="theme">Theme</button>
+        <button class="builder-tab" data-builder-tab="layout">Layout</button>
+        <button class="builder-tab" data-builder-tab="sections">Sections</button>
+        <button class="builder-tab" data-builder-tab="ai">AI</button>
+      </div>
+
+      <div class="builder-panel active" id="builder-content">
+        <h3>Homepage content</h3>
+        <div class="admin-grid two">
+          <label>Hero badge / eyebrow
+            <input id="heroBadgeText" type="text" />
+          </label>
+          <label>Hero title
+            <input id="heroTitle" type="text" />
+          </label>
+        </div>
+
         <label>Hero subtitle
           <input id="heroSubtitle" type="text" />
         </label>
+
+        <label>Hero description
+          <textarea id="heroDescription" rows="3"></textarea>
+        </label>
+
+        <h3>Tool labels</h3>
+        <div class="admin-grid four">
+          <label>Lesson tab
+            <input id="lessonTabLabel" type="text" />
+          </label>
+          <label>Adapter tab
+            <input id="adapterTabLabel" type="text" />
+          </label>
+          <label>Flashcards tab
+            <input id="flashcardsTabLabel" type="text" />
+          </label>
+          <label>Saved tab
+            <input id="savedTabLabel" type="text" />
+          </label>
+        </div>
+
+        <h3>Tool intro cards</h3>
+        <label>Lesson intro title
+          <input id="lessonIntroTitle" type="text" />
+        </label>
+        <label>Lesson intro text
+          <textarea id="lessonIntroText" rows="2"></textarea>
+        </label>
+        <label>Adapter intro title
+          <input id="adapterIntroTitle" type="text" />
+        </label>
+        <label>Adapter intro text
+          <textarea id="adapterIntroText" rows="2"></textarea>
+        </label>
+        <label>Flashcards intro title
+          <input id="flashcardsIntroTitle" type="text" />
+        </label>
+        <label>Flashcards intro text
+          <textarea id="flashcardsIntroText" rows="2"></textarea>
+        </label>
+
+        <label>Footer text
+          <input id="footerText" type="text" />
+        </label>
       </div>
 
-      <label>Hero description
-        <textarea id="heroDescription" rows="3"></textarea>
-      </label>
+      <div class="builder-panel" id="builder-theme">
+        <h3>Colours and fonts</h3>
+        <div class="admin-grid four">
+          <label>Primary colour
+            <input id="primaryColor" type="color" />
+          </label>
+          <label>Accent colour
+            <input id="accentColor" type="color" />
+          </label>
+          <label>Background
+            <input id="backgroundColor" type="color" />
+          </label>
+          <label>Card colour
+            <input id="cardColor" type="color" />
+          </label>
+        </div>
 
-      <div class="admin-grid three">
-        <label>Primary colour
-          <input id="primaryColor" type="color" />
+        <div class="admin-grid four">
+          <label>Text colour
+            <input id="inkColor" type="color" />
+          </label>
+          <label>Muted text
+            <input id="mutedColor" type="color" />
+          </label>
+          <label>Body font
+            <select id="fontFamily">
+              <option value="DM Sans">DM Sans</option>
+              <option value="Raleway">Raleway</option>
+              <option value="Inter">Inter</option>
+              <option value="Arial">Arial</option>
+            </select>
+          </label>
+          <label>Heading font
+            <select id="headingFont">
+              <option value="Fraunces">Fraunces</option>
+              <option value="DM Sans">DM Sans</option>
+              <option value="Raleway">Raleway</option>
+              <option value="Inter">Inter</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="builder-panel" id="builder-layout">
+        <h3>Layout style</h3>
+        <div class="admin-grid four">
+          <label>Logo size
+            <select id="logoSize">
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label>Page width
+            <select id="layoutWidth">
+              <option value="760px">Narrow</option>
+              <option value="900px">Standard</option>
+              <option value="1100px">Wide</option>
+              <option value="1240px">Full</option>
+            </select>
+          </label>
+          <label>Hero padding
+            <select id="heroPadding">
+              <option value="compact">Compact</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label>Hero alignment
+            <select id="heroAlignment">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="admin-grid four">
+          <label>Border radius
+            <select id="borderRadius">
+              <option value="8px">Small</option>
+              <option value="16px">Medium</option>
+              <option value="24px">Large</option>
+              <option value="32px">Extra round</option>
+            </select>
+          </label>
+          <label>Button radius
+            <select id="buttonRadius">
+              <option value="8px">Small</option>
+              <option value="16px">Medium</option>
+              <option value="999px">Pill</option>
+            </select>
+          </label>
+          <label>Shadow style
+            <select id="shadowStyle">
+              <option value="none">None</option>
+              <option value="soft">Soft</option>
+              <option value="strong">Strong</option>
+            </select>
+          </label>
+          <label>Button style
+            <select id="buttonStyle">
+              <option value="rounded">Rounded</option>
+              <option value="flat">Flat</option>
+              <option value="bold">Bold</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="admin-grid three">
+          <label>Header style
+            <select id="headerStyle">
+              <option value="classic">Classic</option>
+              <option value="minimal">Minimal</option>
+              <option value="hero-card">Hero card</option>
+            </select>
+          </label>
+          <label>Tab style
+            <select id="tabStyle">
+              <option value="pills">Pills</option>
+              <option value="underline">Underline</option>
+              <option value="boxed">Boxed</option>
+            </select>
+          </label>
+          <label>Card style
+            <select id="cardStyle">
+              <option value="soft">Soft</option>
+              <option value="outlined">Outlined</option>
+              <option value="colourful">Colourful</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="builder-panel" id="builder-sections">
+        <h3>Show / hide sections</h3>
+        <div class="admin-grid four">
+          <label>Hero shapes
+            <select id="showHeroShapes">
+              <option value="true">Show</option>
+              <option value="false">Hide</option>
+            </select>
+          </label>
+          <label>Tool intro cards
+            <select id="showToolIntros">
+              <option value="true">Show</option>
+              <option value="false">Hide</option>
+            </select>
+          </label>
+          <label>Saved library
+            <select id="showSavedLibrary">
+              <option value="true">Show</option>
+              <option value="false">Hide</option>
+            </select>
+          </label>
+          <label>Footer
+            <select id="showFooter">
+              <option value="true">Show</option>
+              <option value="false">Hide</option>
+            </select>
+          </label>
+        </div>
+
+        <h3>Commercial settings</h3>
+        <div class="admin-grid four">
+          <label>Free limit
+            <input id="freeLimit" type="number" min="0" />
+          </label>
+          <label>Price
+            <input id="price" type="number" min="0" />
+          </label>
+          <label>Currency
+            <input id="currency" type="text" />
+          </label>
+          <label>Show pricing
+            <select id="showPricing">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="builder-panel" id="builder-ai">
+        <h3>AI instructions</h3>
+        <label>Extra lesson plan instruction
+          <textarea id="lessonPromptExtra" rows="4" placeholder="Example: Always include a movement activity and a no-print option."></textarea>
         </label>
-        <label>Accent colour
-          <input id="accentColor" type="color" />
-        </label>
-        <label>Logo size
-          <select id="logoSize">
-            <option value="small">Small</option>
-            <option value="medium">Medium</option>
-            <option value="large">Large</option>
-          </select>
+
+        <label>Extra flashcards instruction
+          <textarea id="flashcardsPromptExtra" rows="4" placeholder="Example: Prefer concrete nouns and short sentences."></textarea>
         </label>
       </div>
 
-      <div class="admin-grid four">
-        <label>Free limit
-          <input id="freeLimit" type="number" min="0" />
-        </label>
-        <label>Price
-          <input id="price" type="number" min="0" />
-        </label>
-        <label>Currency
-          <input id="currency" type="text" />
-        </label>
-        <label>Show pricing
-          <select id="showPricing">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </label>
+      <h3>Live preview</h3>
+      <div class="admin-preview" id="admin-preview">
+        <div class="preview-hero">
+          <span id="preview-badge">YL Spark</span>
+          <h2 id="preview-title">YL Spark</h2>
+          <p id="preview-subtitle">Materiales de Clase para Young Learners</p>
+          <p id="preview-description">AI-powered lesson planning...</p>
+          <button class="btn primary">Sample button</button>
+        </div>
+        <div class="preview-card">
+          <strong>Sample card</strong>
+          <p>This preview updates as you edit the UI.</p>
+        </div>
       </div>
 
-      <h3>AI instructions</h3>
-      <label>Extra lesson plan instruction
-        <textarea id="lessonPromptExtra" rows="3" placeholder="Example: Always include a movement activity and a no-print option."></textarea>
-      </label>
-
-      <label>Extra flashcards instruction
-        <textarea id="flashcardsPromptExtra" rows="3" placeholder="Example: Prefer concrete nouns and short sentences."></textarea>
-      </label>
-
-      <div class="admin-actions">
-        <button class="btn primary" id="save-settings-btn">Save settings</button>
+      <div class="admin-actions sticky-save">
+        <button class="btn primary" id="save-settings-btn">Save all changes</button>
+        <button class="btn ghost" id="preview-settings-btn" type="button">Preview changes</button>
         <span id="save-status" class="hint"></span>
       </div>
     </section>

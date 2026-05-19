@@ -1400,3 +1400,96 @@ main.container {
   width: 230px !important;
   max-width: 90% !important;
 }
+
+
+/* UI Builder dynamic styles */
+body[data-shadow-style="none"] .form,
+body[data-shadow-style="none"] .output,
+body[data-shadow-style="none"] .tool-intro,
+body[data-shadow-style="none"] .library-item {
+  box-shadow: none !important;
+}
+
+body[data-shadow-style="strong"] .form,
+body[data-shadow-style="strong"] .output,
+body[data-shadow-style="strong"] .tool-intro,
+body[data-shadow-style="strong"] .library-item {
+  box-shadow: 0 18px 48px rgba(40,37,29,.18) !important;
+}
+
+body[data-card-style="outlined"] .form,
+body[data-card-style="outlined"] .output,
+body[data-card-style="outlined"] .tool-intro,
+body[data-card-style="outlined"] .library-item {
+  box-shadow: none !important;
+  border-width: 2px !important;
+}
+
+body[data-card-style="colourful"] .tool-intro {
+  background: linear-gradient(135deg, var(--teal-soft), var(--coral-soft)) !important;
+}
+
+body[data-tab-style="underline"] .tab {
+  border-radius: 0 !important;
+  background: transparent !important;
+  border-bottom: 3px solid transparent !important;
+}
+
+body[data-tab-style="underline"] .tab.active {
+  color: var(--teal-dark) !important;
+  border-bottom-color: var(--teal) !important;
+}
+
+body[data-tab-style="boxed"] .tab {
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--line) !important;
+}
+
+body[data-button-style="flat"] .btn {
+  box-shadow: none !important;
+}
+
+body[data-button-style="bold"] .btn {
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+body[data-hero-alignment="center"] .site-header,
+body[data-hero-alignment="center"] .site-header .container {
+  text-align: center;
+}
+
+body[data-hero-alignment="center"] .lede {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body[data-hero-padding="compact"] .site-header {
+  padding-top: 28px !important;
+  padding-bottom: 18px !important;
+}
+
+body[data-hero-padding="medium"] .site-header {
+  padding-top: 46px !important;
+  padding-bottom: 24px !important;
+}
+
+body[data-hero-padding="large"] .site-header {
+  padding-top: 72px !important;
+  padding-bottom: 36px !important;
+}
+
+.logo-small {
+  width: 90px !important;
+  max-width: 60% !important;
+}
+
+.logo-medium {
+  width: 150px !important;
+  max-width: 75% !important;
+}
+
+.logo-large {
+  width: 230px !important;
+  max-width: 90% !important;
+}

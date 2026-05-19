@@ -31,3 +31,40 @@ create policy "No public app_settings writes"
 on app_settings for all
 using (false)
 with check (false);
+
+-- YL Spark UI Builder Settings
+insert into app_settings (key, value)
+values
+  ('fontFamily', '"DM Sans"'::jsonb),
+  ('headingFont', '"Fraunces"'::jsonb),
+  ('backgroundColor', '"#fcf8ef"'::jsonb),
+  ('cardColor', '"#ffffff"'::jsonb),
+  ('inkColor', '"#28251d"'::jsonb),
+  ('mutedColor', '"#6f6b62"'::jsonb),
+  ('borderRadius', '"16px"'::jsonb),
+  ('buttonRadius', '"999px"'::jsonb),
+  ('shadowStyle', '"soft"'::jsonb),
+  ('layoutWidth', '"900px"'::jsonb),
+  ('heroPadding', '"large"'::jsonb),
+  ('heroAlignment', '"left"'::jsonb),
+  ('headerStyle', '"classic"'::jsonb),
+  ('tabStyle', '"pills"'::jsonb),
+  ('cardStyle', '"soft"'::jsonb),
+  ('buttonStyle', '"rounded"'::jsonb),
+  ('showHeroShapes', 'true'::jsonb),
+  ('showFooter', 'true'::jsonb),
+  ('showToolIntros', 'true'::jsonb),
+  ('showSavedLibrary', 'true'::jsonb),
+  ('heroBadgeText', '"YL Spark"'::jsonb),
+  ('lessonTabLabel', '"Lesson plan"'::jsonb),
+  ('adapterTabLabel', '"Adapt activity"'::jsonb),
+  ('flashcardsTabLabel', '"Flashcards"'::jsonb),
+  ('savedTabLabel', '"Saved"'::jsonb),
+  ('lessonIntroTitle', '"Spark a full lesson"'::jsonb),
+  ('lessonIntroText', '"Tell me about your class — age, level, topic, time. I will draft a complete lesson with stages, teacher language, materials, visuals and a quick check."'::jsonb),
+  ('adapterIntroTitle', '"Adapt any activity"'::jsonb),
+  ('adapterIntroText', '"Paste an activity and reshape it for your age and level — simpler, more physical, more visual, or scaffolded."'::jsonb),
+  ('flashcardsIntroTitle', '"Build a vocab set"'::jsonb),
+  ('flashcardsIntroText', '"Pick a topic. Get printable flashcards with sentences, image ideas, a chant and games."'::jsonb),
+  ('footerText', '"YL Spark · Materiales de Clase para Young Learners"'::jsonb)
+on conflict (key) do nothing;

@@ -70,8 +70,50 @@ function updatePricingText() {
 function applyAdminSettings() {
   const s = appConfig.appSettings || {};
 
-  if (s.primaryColor) document.documentElement.style.setProperty("--teal", s.primaryColor);
-  if (s.accentColor) document.documentElement.style.setProperty("--coral", s.accentColor);
+  const root = document.documentElement;
+  const setVar = (name, value) => {
+    if (value !== undefined && value !== null && value !== "") root.style.setProperty(name, value);
+  };
+
+  setVar("--teal", s.primaryColor);
+  setVar("--teal-dark", s.primaryColor);
+  setVar("--coral", s.accentColor);
+  setVar("--bg", s.backgroundColor);
+  setVar("--card", s.cardColor);
+  setVar("--ink", s.inkColor);
+  setVar("--muted", s.mutedColor);
+  setVar("--radius", s.borderRadius);
+  setVar("--radius-sm", s.borderRadius);
+
+  if (s.layoutWidth) {
+    document.querySelectorAll(".container").forEach((el) => {
+      el.style.maxWidth = s.layoutWidth;
+    });
+  }
+
+  if (s.buttonRadius) {
+    document.querySelectorAll(".btn").forEach((el) => {
+      el.style.borderRadius = s.buttonRadius;
+    });
+  }
+
+  if (s.fontFamily) {
+    document.body.style.fontFamily = `"${s.fontFamily}", system-ui, -apple-system, sans-serif`;
+  }
+
+  if (s.headingFont) {
+    document.querySelectorAll("h1, h2, h3, .output h2, .tool-intro h2").forEach((el) => {
+      el.style.fontFamily = `"${s.headingFont}", "DM Sans", serif`;
+    });
+  }
+
+  document.body.dataset.shadowStyle = s.shadowStyle || "soft";
+  document.body.dataset.headerStyle = s.headerStyle || "classic";
+  document.body.dataset.tabStyle = s.tabStyle || "pills";
+  document.body.dataset.cardStyle = s.cardStyle || "soft";
+  document.body.dataset.buttonStyle = s.buttonStyle || "rounded";
+  document.body.dataset.heroAlignment = s.heroAlignment || "left";
+  document.body.dataset.heroPadding = s.heroPadding || "large";
 
   const heroTitle = document.querySelector(".site-header h1, .hero-title");
   if (heroTitle && s.heroTitle) heroTitle.textContent = s.heroTitle;
@@ -80,19 +122,78 @@ function applyAdminSettings() {
   if (lede && s.heroDescription) lede.textContent = s.heroDescription;
 
   const eyebrow = document.querySelector(".eyebrow");
-  if (eyebrow && s.heroSubtitle) {
-    eyebrow.innerHTML = `<span class="logo-dot"></span> ${escapeHtml(s.heroSubtitle)}`;
+  if (eyebrow) {
+    const badge = s.heroBadgeText || s.heroSubtitle;
+    if (badge) eyebrow.innerHTML = `<span class="logo-dot"></span> ${escapeHtml(badge)}`;
   }
 
-  const logo = document.querySelector(".main-logo, .site-logo, .admin-hero img, .brand-logo");
+  const h1 = document.querySelector(".site-header h1");
+  if (h1 && s.heroTitle) {
+    h1.innerHTML = `${escapeHtml(s.heroTitle)}${s.heroSubtitle ? ` <span class="hl">${escapeHtml(s.heroSubtitle)}</span>` : ""}`;
+  }
+
+  const logo = document.querySelector(".main-logo, .site-logo, .brand-logo, .site-header img");
   if (logo && s.logoSize) {
     logo.classList.remove("logo-small", "logo-medium", "logo-large");
     logo.classList.add(`logo-${s.logoSize}`);
   }
 
+  const tabMap = {
+    lessonTabLabel: '[data-tab="lesson"] span',
+    adapterTabLabel: '[data-tab="adapter"] span',
+    flashcardsTabLabel: '[data-tab="flashcards"] span',
+    savedTabLabel: '[data-tab="library"] span:not(.badge)'
+  };
+
+  Object.entries(tabMap).forEach(([key, selector]) => {
+    const el = document.querySelector(selector);
+    if (el && s[key]) el.textContent = s[key];
+  });
+
+  const introMap = [
+    ["panel-lesson", "lessonIntroTitle", "lessonIntroText"],
+    ["panel-adapter", "adapterIntroTitle", "adapterIntroText"],
+    ["panel-flashcards", "flashcardsIntroTitle", "flashcardsIntroText"]
+  ];
+
+  introMap.forEach(([panelId, titleKey, textKey]) => {
+    const panel = document.getElementById(panelId);
+    if (!panel) return;
+    const intro = panel.querySelector(".tool-intro");
+    if (!intro) return;
+    const title = intro.querySelector("h2");
+    const text = intro.querySelector("p");
+    if (title && s[titleKey]) title.textContent = s[titleKey];
+    if (text && s[textKey]) text.textContent = s[textKey];
+  });
+
+  if (s.showHeroShapes === false) {
+    const shapes = document.querySelector(".hero-shapes");
+    if (shapes) shapes.hidden = true;
+  }
+
+  if (s.showFooter === false) {
+    const footer = document.querySelector(".site-footer");
+    if (footer) footer.hidden = true;
+  }
+
+  if (s.showToolIntros === false) {
+    document.querySelectorAll(".tool-intro").forEach((el) => el.hidden = true);
+  }
+
+  if (s.showSavedLibrary === false) {
+    const savedTab = document.querySelector('[data-tab="library"]');
+    if (savedTab) savedTab.hidden = true;
+  }
+
   if (s.showPricing === false) {
     const pricing = document.getElementById("pricing");
     if (pricing) pricing.hidden = true;
+  }
+
+  if (s.footerText) {
+    const footerText = document.querySelector(".site-footer p");
+    if (footerText) footerText.textContent = s.footerText;
   }
 }
 

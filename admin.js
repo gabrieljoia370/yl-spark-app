@@ -14,8 +14,89 @@ const ids = [
   "currency",
   "showPricing",
   "lessonPromptExtra",
-  "flashcardsPromptExtra"
-];
+  "flashcardsPromptExtra",
+  "fontFamily",
+  "headingFont",
+  "backgroundColor",
+  "cardColor",
+  "inkColor",
+  "mutedColor",
+  "borderRadius",
+  "buttonRadius",
+  "shadowStyle",
+  "layoutWidth",
+  "heroPadding",
+  "heroAlignment",
+  "headerStyle",
+  "tabStyle",
+  "cardStyle",
+  "buttonStyle",
+  "showHeroShapes",
+  "showFooter",
+  "showToolIntros",
+  "showSavedLibrary",
+  "heroBadgeText",
+  "lessonTabLabel",
+  "adapterTabLabel",
+  "flashcardsTabLabel",
+  "savedTabLabel",
+  "lessonIntroTitle",
+  "lessonIntroText",
+  "adapterIntroTitle",
+  "adapterIntroText",
+  "flashcardsIntroTitle",
+  "flashcardsIntroText",
+  "footerText"
+]
+
+
+const ADMIN_DEFAULTS = {
+  heroTitle: "YL Spark",
+  heroSubtitle: "Materiales de Clase para Young Learners",
+  heroDescription: "AI-powered lesson planning, flashcards, visual supports and classroom materials for English teachers of young learners.",
+  primaryColor: "#01696f",
+  accentColor: "#ef6b53",
+  backgroundColor: "#fcf8ef",
+  cardColor: "#ffffff",
+  inkColor: "#28251d",
+  mutedColor: "#6f6b62",
+  fontFamily: "DM Sans",
+  headingFont: "Fraunces",
+  logoSize: "medium",
+  freeLimit: 3,
+  price: 390,
+  currency: "UYU",
+  showPricing: "true",
+  borderRadius: "16px",
+  buttonRadius: "999px",
+  shadowStyle: "soft",
+  layoutWidth: "900px",
+  heroPadding: "large",
+  heroAlignment: "left",
+  headerStyle: "classic",
+  tabStyle: "pills",
+  cardStyle: "soft",
+  buttonStyle: "rounded",
+  showHeroShapes: "true",
+  showFooter: "true",
+  showToolIntros: "true",
+  showSavedLibrary: "true",
+  heroBadgeText: "YL Spark",
+  lessonTabLabel: "Lesson plan",
+  adapterTabLabel: "Adapt activity",
+  flashcardsTabLabel: "Flashcards",
+  savedTabLabel: "Saved",
+  lessonIntroTitle: "Spark a full lesson",
+  lessonIntroText: "Tell me about your class — age, level, topic and time.",
+  adapterIntroTitle: "Adapt any activity",
+  adapterIntroText: "Paste an activity and reshape it for your age and level.",
+  flashcardsIntroTitle: "Build a vocab set",
+  flashcardsIntroText: "Pick a topic and get printable flashcards.",
+  footerText: "YL Spark · Materiales de Clase para Young Learners",
+  lessonPromptExtra: "",
+  flashcardsPromptExtra: ""
+};
+
 
 function $(id) {
   return document.getElementById(id);
@@ -60,6 +141,26 @@ function wireAdminEvents() {
     await adminSupabase.auth.signOut();
   });
   $("save-settings-btn")?.addEventListener("click", saveSettings);
+  $("preview-settings-btn")?.addEventListener("click", updatePreview);
+  wireBuilderTabs();
+
+  ids.forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("input", updatePreview);
+    if (el) el.addEventListener("change", updatePreview);
+  });
+}
+
+function wireBuilderTabs() {
+  document.querySelectorAll(".builder-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.builderTab;
+      document.querySelectorAll(".builder-tab").forEach((t) => t.classList.toggle("active", t === tab));
+      document.querySelectorAll(".builder-panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.id === `builder-${target}`);
+      });
+    });
+  });
 }
 
 async function adminEmailLogin() {
@@ -126,24 +227,19 @@ function fillSettings(settings) {
   ids.forEach((id) => {
     const el = $(id);
     if (!el) return;
+
     let value = settings[id];
 
-    if (value === undefined || value === null) {
-      if (id === "primaryColor") value = "#01696f";
-      else if (id === "accentColor") value = "#ef6b53";
-      else if (id === "logoSize") value = "medium";
-      else if (id === "freeLimit") value = 3;
-      else if (id === "price") value = 390;
-      else if (id === "currency") value = "UYU";
-      else if (id === "showPricing") value = "true";
-      else value = "";
+    if (value === undefined || value === null || value === "") {
+      value = ADMIN_DEFAULTS[id] ?? "";
     }
 
     if (typeof value === "boolean") value = String(value);
     el.value = value;
   });
-}
 
+  updatePreview();
+}
 function collectSettings() {
   const settings = {};
   ids.forEach((id) => {
@@ -152,13 +248,46 @@ function collectSettings() {
 
     let value = el.value;
     if (id === "freeLimit" || id === "price") value = Number(value || 0);
-    if (id === "showPricing") value = value === "true";
+    if (["showPricing", "showHeroShapes", "showFooter", "showToolIntros", "showSavedLibrary"].includes(id)) {
+      value = value === "true";
+    }
 
     settings[id] = value;
   });
   return settings;
 }
 
+function updatePreview() {
+  const s = collectSettings();
+
+  const preview = $("admin-preview");
+  if (!preview) return;
+
+  preview.style.setProperty("--preview-primary", s.primaryColor || "#01696f");
+  preview.style.setProperty("--preview-accent", s.accentColor || "#ef6b53");
+  preview.style.background = s.backgroundColor || "#fcf8ef";
+  preview.style.color = s.inkColor || "#28251d";
+  preview.style.borderRadius = s.borderRadius || "16px";
+  preview.style.fontFamily = s.fontFamily || "DM Sans";
+
+  const card = preview.querySelector(".preview-card");
+  if (card) {
+    card.style.background = s.cardColor || "#ffffff";
+    card.style.borderRadius = s.borderRadius || "16px";
+    card.style.boxShadow = s.shadowStyle === "none" ? "none" : s.shadowStyle === "strong" ? "0 16px 40px rgba(0,0,0,.18)" : "0 8px 24px rgba(0,0,0,.08)";
+  }
+
+  const btn = preview.querySelector(".btn");
+  if (btn) {
+    btn.style.background = s.primaryColor || "#01696f";
+    btn.style.borderRadius = s.buttonRadius || "999px";
+  }
+
+  $("preview-badge").textContent = s.heroBadgeText || s.heroSubtitle || "YL Spark";
+  $("preview-title").textContent = s.heroTitle || "YL Spark";
+  $("preview-subtitle").textContent = s.heroSubtitle || "";
+  $("preview-description").textContent = s.heroDescription || "";
+}
 async function saveSettings() {
   try {
     setSaveStatus("Saving...");
