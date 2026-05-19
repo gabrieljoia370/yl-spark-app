@@ -12,7 +12,7 @@ let currentSession = null;
 
 async function initCommercialMvp() {
   try {
-    const res = await fetch("/api/config");
+    const res = await fetch("/api/config", { cache: "no-store" });
     appConfig = await res.json();
 
     setupUpgradeButtons();
@@ -37,13 +37,35 @@ async function initCommercialMvp() {
 }
 
 
-function updatePricingText() {
-  const priceEls = document.querySelectorAll("[data-price]");
-  priceEls.forEach((el) => {
-    el.textContent = `${appConfig.currency || "UYU"} ${appConfig.price || 390}`;
-  });
+function formatAppPrice() {
+  const currency = appConfig.currency || appConfig.appSettings?.currency || "UYU";
+  const price = appConfig.price || appConfig.appSettings?.price || 390;
+  return `${currency} ${price}`;
 }
 
+function updatePricingText() {
+  const priceText = formatAppPrice();
+
+  // Preferred hook
+  document.querySelectorAll("[data-price]").forEach((el) => {
+    el.textContent = priceText;
+  });
+
+  // Specific fallback for current pricing card
+  const teacherPlanPrice = document.getElementById("teacher-plan-price");
+  if (teacherPlanPrice) {
+    teacherPlanPrice.innerHTML = `<span data-price>${priceText}</span> / month`;
+  }
+
+  // Safety fallback: only update the featured Teacher Plan, not Free or Custom
+  const featuredPrice = document.querySelector(".price-card.featured .price");
+  if (featuredPrice) {
+    featuredPrice.innerHTML = `<span data-price>${priceText}</span> / month`;
+  }
+
+  const paymentLink = document.getElementById("payment-link");
+  if (paymentLink) paymentLink.setAttribute("aria-label", `Upgrade for ${priceText}`);
+}
 
 function applyAdminSettings() {
   const s = appConfig.appSettings || {};
